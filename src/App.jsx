@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
+import { relaunch } from '@tauri-apps/plugin-process';
 
 import Sidebar from "./components/Sidebar";
 import ManagerView from "./components/ManagerView";
 import SettingsView from "./components/SettingsView";
-import { PromptDialog, ConfirmDialog } from "./components/Dialog";
+import { PromptDialog, ConfirmDialog, DataMigrationDialog } from "./components/Dialog";
 
 import "./styles/app.css";
 
@@ -16,9 +17,16 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState(1);
   const [selectedModId, setSelectedModId] = useState(null);
   
+  // Data location states
+  const [dataLocation, setDataLocation] = useState("appdata");
+  const [appdataPath, setAppdataPath] = useState("");
+  const [localPath, setLocalPath] = useState("");
+  
   // Dialog states
   const [categoryPrompt, setCategoryPrompt] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [migrationDialog, setMigrationDialog] = useState(null);
+  const [restartDialog, setRestartDialog] = useState(false);
   
   // Progress states
   const [isProcessing, setIsProcessing] = useState(false);
@@ -26,6 +34,17 @@ export default function App() {
   const [progressPercent, setProgressPercent] = useState(0);
 
   useEffect(() => {
+    // Load paths and data location
+    Promise.all([
+      invoke("get_appdata_path"),
+      invoke("get_local_path"),
+      invoke("get_data_location")
+    ]).then(([appdata, local, location]) => {
+      setAppdataPath(appdata);
+      setLocalPath(local);
+      setDataLocation(location);
+    });
+
     invoke("load_db").then(async (loadedDb) => {
       // Load previews for all mods
       const modsWithPreviews = await Promise.all(
@@ -332,6 +351,111 @@ export default function App() {
     });
   }
 
+  async function changeDataLocation(newLocation) {
+    try {
+      const currentLocation = dataLocation;
+      
+      if (currentLocation === newLocation) return;
+      
+      // Check if both locations have data
+      const currentExists = await invoke("check_db_exists", { location: currentLocation });
+      const newExists = await invoke("check_db_exists", { location: newLocation });
+      
+      if (currentExists && newExists) {
+        // Both have data - load summaries and show migration dialog
+        const fromSummary = await invoke("get_db_summary", { location: currentLocation });
+        const toSummary = await invoke("get_db_summary", { location: newLocation });
+        
+        setMigrationDialog({
+          from: currentLocation,
+          to: newLocation,
+          fromSummary: JSON.parse(fromSummary),
+          toSummary: JSON.parse(toSummary)
+        });
+      } else if (currentExists) {
+        // Only current has data - migrate it
+        await invoke("migrate_data", {
+          from: currentLocation,
+          to: newLocation,
+          deleteOld: true,
+          createBackup: false
+        });
+        
+        await invoke("set_data_location", { location: newLocation });
+        setRestartDialog(true);
+      } else {
+        // No data or only new location has data - just switch
+        await invoke("set_data_location", { location: newLocation });
+        setRestartDialog(true);
+      }
+    } catch (err) {
+      alert("Failed to change data location: " + err);
+    }
+  }
+
+  async function handleMigrationKeep(keepLocation, createBackup) {
+    try {
+      const { from, to } = migrationDialog;
+      
+      if (keepLocation === from) {
+        // Keep old location data, overwrite new location
+        await invoke("migrate_data", {
+          from: from,
+          to: to,
+          deleteOld: true,
+          createBackup: createBackup
+        });
+      } else {
+        // Keep new location data, delete old (new becomes source in migration)
+        await invoke("migrate_data", {
+          from: to,
+          to: to,
+          deleteOld: false,
+          createBackup: false
+        });
+        
+        // Now delete old location with optional backup
+        if (createBackup) {
+          // Create backup before deleting
+          const oldPath = from === "appdata" 
+            ? await invoke("get_appdata_path") 
+            : await invoke("get_local_path");
+          // Backup will be created by migrate_data when deleteOld is true
+          await invoke("migrate_data", {
+            from: from,
+            to: from + "-temp",
+            deleteOld: false,
+            createBackup: true
+          });
+        }
+        
+        // Delete old location file
+        await invoke("migrate_data", {
+          from: from,
+          to: from,
+          deleteOld: true,
+          createBackup: false
+        });
+      }
+      
+      await invoke("set_data_location", { location: to });
+      setMigrationDialog(null);
+      setRestartDialog(true);
+    } catch (err) {
+      alert("Migration failed: " + err);
+      setMigrationDialog(null);
+    }
+  }
+
+  async function handleRestart() {
+    try {
+      await relaunch();
+    } catch (err) {
+      alert("Please restart the application manually.");
+      setRestartDialog(false);
+    }
+  }
+
   return (
     <div className="app">
       <Sidebar view={view} onChangeView={setView} />
@@ -361,10 +485,14 @@ export default function App() {
           <SettingsView
             rootFolder={db.root_folder}
             modStrategy={db.mod_strategy}
+            dataLocation={dataLocation}
+            appdataPath={appdataPath}
+            localPath={localPath}
             onChangeRoot={(value) =>
               persist({ ...db, root_folder: value })
             }
             onChangeStrategy={changeModStrategy}
+            onChangeDataLocation={changeDataLocation}
           />
         )}
       </main>
@@ -383,6 +511,24 @@ export default function App() {
         message={deleteConfirm?.message}
         onConfirm={deleteConfirm?.onConfirm}
         onCancel={() => setDeleteConfirm(null)}
+      />
+
+      <DataMigrationDialog
+        isOpen={!!migrationDialog}
+        fromLocation={migrationDialog?.from}
+        toLocation={migrationDialog?.to}
+        fromSummary={migrationDialog?.fromSummary}
+        toSummary={migrationDialog?.toSummary}
+        onKeep={handleMigrationKeep}
+        onCancel={() => setMigrationDialog(null)}
+      />
+
+      <ConfirmDialog
+        isOpen={restartDialog}
+        title="Restart Required"
+        message="Data location has been changed. The application needs to restart to apply changes."
+        onConfirm={handleRestart}
+        onCancel={() => setRestartDialog(false)}
       />
 
       {isProcessing && (

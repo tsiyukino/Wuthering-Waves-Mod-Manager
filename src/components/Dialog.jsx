@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export function PromptDialog({ isOpen, title, placeholder, onConfirm, onCancel }) {
   const [value, setValue] = useState("");
@@ -82,6 +82,129 @@ export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
           </button>
           <button className="modal-btn-confirm" onClick={onConfirm}>
             OK
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function DataMigrationDialog({ 
+  isOpen, 
+  fromLocation, 
+  toLocation, 
+  fromSummary,
+  toSummary,
+  onKeep, 
+  onCancel 
+}) {
+  const [createBackup, setCreateBackup] = React.useState(true);
+
+  if (!isOpen) return null;
+
+  const fromLabel = fromLocation === "appdata" ? "AppData" : "Local Folder";
+  const toLabel = toLocation === "appdata" ? "AppData" : "Local Folder";
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-dialog modal-dialog-large" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Data Migration - Choose Which Data to Keep</h3>
+        </div>
+        
+        <div className="modal-body">
+          <p style={{ marginBottom: 16 }}>
+            Both locations contain data. Please review the details and choose which one to keep:
+          </p>
+
+          <div className="migration-comparison">
+            <div className="migration-option">
+              <div className="migration-option-header">{fromLabel} (Current)</div>
+              {fromSummary ? (
+                <div className="migration-details">
+                  <div className="detail-row">
+                    <span className="detail-label">Categories:</span>
+                    <span className="detail-value">{fromSummary.categories}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Mods:</span>
+                    <span className="detail-value">{fromSummary.mods}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Root Folder:</span>
+                    <span className="detail-value detail-path">{fromSummary.root_folder}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Strategy:</span>
+                    <span className="detail-value">{fromSummary.mod_strategy}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="migration-details">No data</div>
+              )}
+            </div>
+
+            <div className="migration-arrow">→</div>
+
+            <div className="migration-option">
+              <div className="migration-option-header">{toLabel} (Target)</div>
+              {toSummary ? (
+                <div className="migration-details">
+                  <div className="detail-row">
+                    <span className="detail-label">Categories:</span>
+                    <span className="detail-value">{toSummary.categories}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Mods:</span>
+                    <span className="detail-value">{toSummary.mods}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Root Folder:</span>
+                    <span className="detail-value detail-path">{toSummary.root_folder}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">Strategy:</span>
+                    <span className="detail-value">{toSummary.mod_strategy}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="migration-details">No data</div>
+              )}
+            </div>
+          </div>
+
+          <div className="migration-backup-option">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={createBackup}
+                onChange={(e) => setCreateBackup(e.target.checked)}
+              />
+              <span>Create backup of discarded data (.json.backup)</span>
+            </label>
+          </div>
+          
+          <div className="migration-warning">
+            ⚠️ The data you don't keep will be {createBackup ? 'backed up and then ' : ''}deleted. 
+            {createBackup && ' You can restore from the .backup file if needed.'}
+          </div>
+        </div>
+        
+        <div className="modal-footer">
+          <button className="modal-btn-cancel" onClick={onCancel}>
+            Cancel
+          </button>
+          <button 
+            className="modal-btn-secondary" 
+            onClick={() => onKeep(fromLocation, createBackup)}
+          >
+            Keep {fromLabel}
+          </button>
+          <button 
+            className="modal-btn-confirm" 
+            onClick={() => onKeep(toLocation, createBackup)}
+          >
+            Keep {toLabel}
           </button>
         </div>
       </div>

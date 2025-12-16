@@ -33,10 +33,34 @@ pub struct Database {
     pub mods: Vec<Mod>,
 }
 
+fn get_storage_location() -> String {
+    let config_path = Path::new(".").join("storage-config.json");
+    
+    if config_path.exists() {
+        if let Ok(content) = fs::read_to_string(&config_path) {
+            if let Ok(config) = serde_json::from_str::<serde_json::Value>(&content) {
+                if let Some(location) = config["storage_location"].as_str() {
+                    return location.to_string();
+                }
+            }
+        }
+    }
+    
+    String::from("appdata")
+}
+
 fn get_db_path() -> PathBuf {
-    let mut path = PathBuf::from(".");
-    path.push("mod-manager.json");
-    path
+    let location = get_storage_location();
+    
+    if location == "appdata" {
+        if let Ok(appdata) = std::env::var("APPDATA").or_else(|_| std::env::var("HOME")) {
+            let dir = Path::new(&appdata).join("ModManager");
+            let _ = fs::create_dir_all(&dir);
+            return dir.join("mod-manager.json");
+        }
+    }
+    
+    PathBuf::from(".").join("mod-manager.json")
 }
 
 #[tauri::command]
@@ -232,6 +256,138 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
 }
 
 #[tauri::command]
+fn get_appdata_path() -> Result<String, String> {
+    let appdata = std::env::var("APPDATA")
+        .or_else(|_| std::env::var("HOME"))
+        .map_err(|e| format!("Cannot get app data path: {}", e))?;
+    
+    let path = Path::new(&appdata).join("ModManager");
+    Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn get_local_path() -> Result<String, String> {
+    let current = std::env::current_dir()
+        .map_err(|e| format!("Cannot get current directory: {}", e))?;
+    Ok(current.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn check_db_exists(location: String) -> Result<bool, String> {
+    let path = if location == "appdata" {
+        let appdata = get_appdata_path()?;
+        Path::new(&appdata).join("mod-manager.json")
+    } else {
+        Path::new(".").join("mod-manager.json")
+    };
+    
+    Ok(path.exists())
+}
+
+#[tauri::command]
+fn migrate_data(from: String, to: String, delete_old: bool, create_backup: bool) -> Result<(), String> {
+    let from_path = if from == "appdata" {
+        let appdata = get_appdata_path()?;
+        Path::new(&appdata).join("mod-manager.json")
+    } else {
+        Path::new(".").join("mod-manager.json")
+    };
+    
+    let to_path = if to == "appdata" {
+        let appdata = get_appdata_path()?;
+        let dir = Path::new(&appdata);
+        fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+        dir.join("mod-manager.json")
+    } else {
+        Path::new(".").join("mod-manager.json")
+    };
+    
+    // If destination exists and we're not deleting it, create backup first
+    if to_path.exists() && !delete_old {
+        let backup_path = to_path.with_extension("json.backup");
+        fs::copy(&to_path, &backup_path)
+            .map_err(|e| format!("Failed to create backup: {}", e))?;
+    }
+    
+    // Copy from source to destination
+    if from_path.exists() {
+        // Read and write to avoid file locking issues
+        let content = fs::read_to_string(&from_path)
+            .map_err(|e| format!("Failed to read source data: {}", e))?;
+        
+        fs::write(&to_path, content)
+            .map_err(|e| format!("Failed to write data: {}", e))?;
+        
+        // Create backup of old location if requested
+        if create_backup && !delete_old {
+            let backup_path = from_path.with_extension("json.backup");
+            let content = fs::read_to_string(&from_path)
+                .map_err(|e| format!("Failed to read for backup: {}", e))?;
+            fs::write(&backup_path, content)
+                .map_err(|e| format!("Failed to create backup: {}", e))?;
+        }
+        
+        // Delete the source if requested
+        if delete_old {
+            fs::remove_file(&from_path)
+                .map_err(|e| format!("Failed to delete old data: {}", e))?;
+        }
+    }
+    
+    Ok(())
+}
+
+#[tauri::command]
+fn get_db_summary(location: String) -> Result<String, String> {
+    let path = if location == "appdata" {
+        let appdata = get_appdata_path()?;
+        Path::new(&appdata).join("mod-manager.json")
+    } else {
+        Path::new(".").join("mod-manager.json")
+    };
+    
+    if !path.exists() {
+        return Ok(String::from("No data"));
+    }
+    
+    let content = fs::read_to_string(&path)
+        .map_err(|e| e.to_string())?;
+    
+    let db: Database = serde_json::from_str(&content)
+        .map_err(|e| e.to_string())?;
+    
+    let summary = serde_json::json!({
+        "categories": db.categories.len(),
+        "mods": db.mods.len(),
+        "root_folder": db.root_folder,
+        "mod_strategy": db.mod_strategy
+    });
+    
+    serde_json::to_string_pretty(&summary)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn set_data_location(location: String) -> Result<(), String> {
+    let config_path = Path::new(".").join("storage-config.json");
+    
+    let config = serde_json::json!({
+        "storage_location": location
+    });
+    
+    let json = serde_json::to_string_pretty(&config)
+        .map_err(|e| e.to_string())?;
+    
+    fs::write(&config_path, json)
+        .map_err(|e| format!("Failed to save storage config: {}", e))
+}
+
+#[tauri::command]
+fn get_data_location() -> Result<String, String> {
+    Ok(get_storage_location())
+}
+
+#[tauri::command]
 async fn extract_archive(archive_path: String, dest_root: String, dest_name: String, window: tauri::Window) -> Result<(), String> {
     let archive_file = fs::File::open(&archive_path)
         .map_err(|e| format!("Failed to open archive: {}", e))?;
@@ -419,6 +575,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             load_db,
             save_db,
@@ -430,6 +587,13 @@ pub fn run() {
             load_preview,
             save_notes,
             load_notes,
+            get_appdata_path,
+            get_local_path,
+            check_db_exists,
+            migrate_data,
+            set_data_location,
+            get_data_location,
+            get_db_summary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
