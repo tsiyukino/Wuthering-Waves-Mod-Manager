@@ -1,3 +1,5 @@
+#![allow(non_snake_case)]
+
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -34,7 +36,7 @@ fn get_db_path() -> PathBuf {
 }
 
 #[tauri::command]
-pub fn load_db() -> Result<Database, String> {
+fn load_db() -> Result<Database, String> {
     let path = get_db_path();
     
     if !path.exists() {
@@ -64,7 +66,7 @@ pub fn load_db() -> Result<Database, String> {
 }
 
 #[tauri::command]
-pub fn save_db(db: Database) -> Result<(), String> {
+fn save_db(db: Database) -> Result<(), String> {
     let path = get_db_path();
     let json = serde_json::to_string_pretty(&db)
         .map_err(|e| e.to_string())?;
@@ -74,7 +76,7 @@ pub fn save_db(db: Database) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn toggle_mod(root: String, name: String, enable: bool) -> Result<(), String> {
+fn toggle_mod(root: String, name: String, enable: bool) -> Result<(), String> {
     let mod_path = Path::new(&root).join(&name);
     
     if !mod_path.exists() {
@@ -105,7 +107,7 @@ pub fn toggle_mod(root: String, name: String, enable: bool) -> Result<(), String
 }
 
 #[tauri::command]
-pub fn delete_mod(root: String, name: String) -> Result<(), String> {
+fn delete_mod(root: String, name: String) -> Result<(), String> {
     let mod_path = Path::new(&root).join(&name);
     
     if !mod_path.exists() {
@@ -117,7 +119,7 @@ pub fn delete_mod(root: String, name: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn save_preview(root: String, name: String, data: String) -> Result<(), String> {
+fn save_preview(root: String, name: String, data: String) -> Result<(), String> {
     let mod_path = Path::new(&root).join(&name);
     
     if !mod_path.exists() {
@@ -136,7 +138,7 @@ pub fn save_preview(root: String, name: String, data: String) -> Result<(), Stri
 }
 
 #[tauri::command]
-pub fn load_preview(root: String, name: String) -> Result<Option<String>, String> {
+fn load_preview(root: String, name: String) -> Result<Option<String>, String> {
     let mod_path = Path::new(&root).join(&name);
     
     for ext in &["png", "jpg", "jpeg", "bmp", "gif"] {
@@ -153,7 +155,7 @@ pub fn load_preview(root: String, name: String) -> Result<Option<String>, String
 }
 
 #[tauri::command]
-pub fn save_notes(root: String, name: String, notes: String) -> Result<(), String> {
+fn save_notes(root: String, name: String, notes: String) -> Result<(), String> {
     let mod_path = Path::new(&root).join(&name);
     
     if !mod_path.exists() {
@@ -166,7 +168,7 @@ pub fn save_notes(root: String, name: String, notes: String) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub fn load_notes(root: String, name: String) -> Result<String, String> {
+fn load_notes(root: String, name: String) -> Result<String, String> {
     let mod_path = Path::new(&root).join(&name);
     let notes_path = mod_path.join("notes.txt");
     

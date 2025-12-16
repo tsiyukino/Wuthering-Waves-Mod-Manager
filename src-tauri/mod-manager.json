@@ -6,6 +6,12 @@
       "name": "Root",
       "parent_id": null,
       "expanded": true
+    },
+    {
+      "id": 2,
+      "name": "UI",
+      "parent_id": 1,
+      "expanded": false
     }
   ],
   "mods": [
@@ -14,14 +20,16 @@
       "name": "123",
       "category_id": 1,
       "enabled": true,
-      "notes": "3"
+      "notes": "3",
+      "preview": null
     },
     {
-      "id": 1765862427651,
-      "name": "2332",
-      "category_id": 1,
+      "id": 1765867341065,
+      "name": "12",
+      "category_id": 2,
       "enabled": false,
-      "notes": ""
+      "notes": "",
+      "preview": null
     }
   ]
 }
