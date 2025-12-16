@@ -1,0 +1,27 @@
+{
+  "root_folder": "E:\\Git\\Mods",
+  "categories": [
+    {
+      "id": 1,
+      "name": "Root",
+      "parent_id": null,
+      "expanded": true
+    }
+  ],
+  "mods": [
+    {
+      "id": 1765862378027,
+      "name": "123",
+      "category_id": 1,
+      "enabled": true,
+      "notes": "3"
+    },
+    {
+      "id": 1765862427651,
+      "name": "2332",
+      "category_id": 1,
+      "enabled": false,
+      "notes": ""
+    }
+  ]
+}
