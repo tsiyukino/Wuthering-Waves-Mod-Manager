@@ -10,6 +10,8 @@ export default function ModList({
   onToggleMod,
   onSelectMod,
   onMultiSelect,
+  onSelectAllVisible,
+  onDeselectAll,
   onSearchChange
 }) {
   // Get all subcategory IDs recursively
@@ -35,6 +37,49 @@ export default function ModList({
       (m.tags && m.tags.some(tag => tag.toLowerCase().includes(query)))
     );
   }
+
+  // Group mods by category for display
+  function getDirectChildren(parentId) {
+    return categories.filter(c => c.parent_id === parentId);
+  }
+
+  function getCategoryMods(categoryId) {
+    return visible.filter(m => m.category_id === categoryId);
+  }
+
+  function renderCategoryGroup(category, depth = 0) {
+    const modsInCategory = getCategoryMods(category.id);
+    const children = getDirectChildren(category.id);
+    const hasContent = modsInCategory.length > 0 || children.length > 0;
+    
+    if (!hasContent) return null;
+
+    return (
+      <div key={category.id} className="category-group" style={{ marginLeft: depth * 20 }}>
+        {depth > 0 && (
+          <div className="category-group-header">
+            📁 {category.name}
+          </div>
+        )}
+        
+        {modsInCategory.map(mod => (
+          <ModItem
+            key={mod.id}
+            mod={mod}
+            selected={mod.id === selectedModId}
+            isMultiSelected={selectedModIds.includes(mod.id)}
+            onToggle={onToggleMod}
+            onSelect={onSelectMod}
+            onMultiSelect={onMultiSelect}
+          />
+        ))}
+
+        {children.map(child => renderCategoryGroup(child, depth + 1))}
+      </div>
+    );
+  }
+
+  const visibleModIds = visible.map(m => m.id);
 
   return (
     <>
@@ -62,17 +107,11 @@ export default function ModList({
             {searchQuery ? "No mods match your search." : "No mods in this category."}
           </div>
         ) : (
-          visible.map(mod => (
-            <ModItem
-              key={mod.id}
-              mod={mod}
-              selected={mod.id === selectedModId}
-              isMultiSelected={selectedModIds.includes(mod.id)}
-              onToggle={onToggleMod}
-              onSelect={onSelectMod}
-              onMultiSelect={onMultiSelect}
-            />
-          ))
+          <>
+            {categories
+              .filter(c => c.id === selectedCategory)
+              .map(rootCat => renderCategoryGroup(rootCat, 0))}
+          </>
         )}
       </div>
     </>

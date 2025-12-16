@@ -17,7 +17,7 @@ export default function ManagerView({
   onToggleMod,
   onSelectMod,
   onMultiSelect,
-  onSelectAll,
+  onSelectAllVisible,
   onDeselectAll,
   onAddMod,
   onDeleteMod,
@@ -37,6 +37,35 @@ export default function ManagerView({
   const [isResizingLeft, setIsResizingLeft] = useState(false);
   const [isResizingRight, setIsResizingRight] = useState(false);
   const containerRef = useRef(null);
+
+  // Calculate visible mods for Select All
+  function getAllSubcategoryIds(categoryId) {
+    const ids = [categoryId];
+    const children = categories.filter(c => c.parent_id === categoryId);
+    
+    for (const child of children) {
+      ids.push(...getAllSubcategoryIds(child.id));
+    }
+    
+    return ids;
+  }
+
+  const categoryIds = getAllSubcategoryIds(selectedCategory);
+  let visibleMods = mods.filter(m => categoryIds.includes(m.category_id));
+  
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase();
+    visibleMods = visibleMods.filter(m => 
+      m.name.toLowerCase().includes(query) ||
+      (m.tags && m.tags.some(tag => tag.toLowerCase().includes(query)))
+    );
+  }
+
+  const visibleModIds = visibleMods.map(m => m.id);
+
+  function handleSelectAll() {
+    onSelectAllVisible(visibleModIds);
+  }
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -123,6 +152,8 @@ export default function ManagerView({
           onToggleMod={onToggleMod}
           onSelectMod={onSelectMod}
           onMultiSelect={onMultiSelect}
+          onSelectAllVisible={onSelectAllVisible}
+          onDeselectAll={onDeselectAll}
           onSearchChange={onSearchChange}
         />
 
@@ -132,7 +163,7 @@ export default function ManagerView({
               <div className="bulk-info">
                 {selectedModIds.length} selected
               </div>
-              <button className="secondary-button" onClick={onSelectAll}>
+              <button className="secondary-button" onClick={handleSelectAll}>
                 Select All
               </button>
               <button className="secondary-button" onClick={onDeselectAll}>
@@ -156,7 +187,7 @@ export default function ManagerView({
               <button className="secondary-button" onClick={onAddMod}>
                 <span>➕</span> Add File
               </button>
-              <button className="secondary-button" onClick={onSelectAll}>
+              <button className="secondary-button" onClick={handleSelectAll}>
                 Select All
               </button>
               <button 

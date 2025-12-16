@@ -358,9 +358,12 @@ export default function App() {
   }
 
   function handleSelectAll() {
-    const visibleMods = db.mods.filter(m => m.category_id === selectedCategory);
-    const visibleIds = visibleMods.map(m => m.id);
-    setSelectedModIds(visibleIds);
+    // This will be called from ModList with visible mod IDs
+    // We need to pass a callback to ModList instead
+  }
+
+  function handleSelectAllVisible(visibleModIds) {
+    setSelectedModIds(visibleModIds);
   }
 
   function handleDeselectAll() {
@@ -498,11 +501,28 @@ export default function App() {
   function updateName(newName) {
     if (!selectedModId) return;
     
-    persist({
-      ...db,
-      mods: db.mods.map(m =>
-        m.id === selectedModId ? { ...m, name: newName } : m
-      )
+    const mod = db.mods.find(m => m.id === selectedModId);
+    if (!mod || mod.name === newName) return;
+    
+    // Check if name already exists
+    if (db.mods.some(m => m.name === newName && m.id !== selectedModId)) {
+      alert("A mod with this name already exists!");
+      return;
+    }
+    
+    invoke("rename_mod", {
+      root: db.root_folder,
+      oldName: mod.name,
+      newName: newName
+    }).then(() => {
+      persist({
+        ...db,
+        mods: db.mods.map(m =>
+          m.id === selectedModId ? { ...m, name: newName } : m
+        )
+      });
+    }).catch(err => {
+      alert("Failed to rename mod: " + err);
     });
   }
 
@@ -656,7 +676,7 @@ export default function App() {
             onToggleMod={toggleMod}
             onSelectMod={selectMod}
             onMultiSelect={handleMultiSelect}
-            onSelectAll={handleSelectAll}
+            onSelectAllVisible={handleSelectAllVisible}
             onDeselectAll={handleDeselectAll}
             onAddMod={addMod}
             onDeleteMod={deleteMod}

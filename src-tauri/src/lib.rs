@@ -218,6 +218,23 @@ fn delete_mod(root: String, name: String) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn rename_mod(root: String, old_name: String, new_name: String) -> Result<(), String> {
+    let old_path = Path::new(&root).join(&old_name);
+    let new_path = Path::new(&root).join(&new_name);
+    
+    if !old_path.exists() {
+        return Err(format!("Mod folder does not exist: {}", old_path.display()));
+    }
+    
+    if new_path.exists() {
+        return Err(format!("A mod with name '{}' already exists", new_name));
+    }
+    
+    fs::rename(&old_path, &new_path)
+        .map_err(|e| format!("Failed to rename mod folder: {}", e))
+}
+
+#[tauri::command]
 async fn copy_mod(source: String, dest_root: String, dest_name: String, window: tauri::Window) -> Result<(), String> {
     let source_path = Path::new(&source);
     let dest_path = Path::new(&dest_root).join(&dest_name);
@@ -629,6 +646,7 @@ pub fn run() {
             save_db,
             toggle_mod,
             delete_mod,
+            rename_mod,
             copy_mod,
             extract_archive,
             save_preview,
