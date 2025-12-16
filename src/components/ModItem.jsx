@@ -8,7 +8,12 @@ export default function ModItem({ mod, selected, isMultiSelected, onToggle, onSe
       // Ctrl/Cmd click for multi-select
       onMultiSelect(mod.id);
     } else {
-      onSelect(mod);
+      // Single click or double click to deselect
+      if (selected) {
+        onSelect(null);
+      } else {
+        onSelect(mod);
+      }
     }
   }
 

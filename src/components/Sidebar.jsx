@@ -1,7 +1,14 @@
 import { useState } from "react";
 
-export default function Sidebar({ view, onChangeView }) {
-  const [collapsed, setCollapsed] = useState(false);
+export default function Sidebar({ view, onChangeView, onClearSelections }) {
+  const [collapsed, setCollapsed] = useState(true);
+
+  function handleViewChange(newView) {
+    if (onClearSelections) {
+      onClearSelections();
+    }
+    onChangeView(newView);
+  }
 
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -19,7 +26,7 @@ export default function Sidebar({ view, onChangeView }) {
       <nav>
         <div
           className={`nav-item ${view === "manager" ? "active" : ""}`}
-          onClick={() => onChangeView("manager")}
+          onClick={() => handleViewChange("manager")}
           title="File Manager"
         >
           <span>📁</span>
@@ -28,7 +35,7 @@ export default function Sidebar({ view, onChangeView }) {
 
         <div
           className={`nav-item ${view === "tags" ? "active" : ""}`}
-          onClick={() => onChangeView("tags")}
+          onClick={() => handleViewChange("tags")}
           title="Tags"
         >
           <span>🏷️</span>
@@ -39,7 +46,7 @@ export default function Sidebar({ view, onChangeView }) {
       <div className="sidebar-footer">
         <div
           className={`nav-item ${view === "settings" ? "active" : ""}`}
-          onClick={() => onChangeView("settings")}
+          onClick={() => handleViewChange("settings")}
           title="Settings"
         >
           <span>⚙️</span>

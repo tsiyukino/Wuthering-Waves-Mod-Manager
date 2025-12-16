@@ -74,7 +74,7 @@ export default function ManagerView({
 
       if (isResizingLeft) {
         const newWidth = e.clientX - containerRect.left;
-        if (newWidth >= 200 && newWidth <= 500) {
+        if (newWidth >= 240 && newWidth <= 500) {
           setLeftWidth(newWidth);
         }
       }
@@ -219,16 +219,21 @@ export default function ManagerView({
       <div
         className="resize-handle"
         onMouseDown={() => setIsResizingRight(true)}
+        style={{ display: selectedMod ? 'block' : 'none' }}
       />
 
-      <ModDetails
-        mod={selectedMod}
-        allTags={mods.flatMap(m => m.tags || []).filter((v, i, a) => a.indexOf(v) === i)}
-        onUpdateNotes={onUpdateNotes}
-        onUploadPreview={onUploadPreview}
-        onUpdateTags={onUpdateTags}
-        onUpdateName={onUpdateName}
-      />
+      {selectedMod && (
+        <div className="right-panel" style={{ width: rightWidth }}>
+          <ModDetails
+            mod={selectedMod}
+            allTags={mods.flatMap(m => m.tags || []).filter((v, i, a) => a.indexOf(v) === i)}
+            onUpdateNotes={onUpdateNotes}
+            onUploadPreview={onUploadPreview}
+            onUpdateTags={onUpdateTags}
+            onUpdateName={onUpdateName}
+          />
+        </div>
+      )}
     </div>
   );
 }

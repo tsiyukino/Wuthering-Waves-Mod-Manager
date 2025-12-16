@@ -105,7 +105,7 @@ export default function TagsView({
                 <div
                   key={tag}
                   className={`tag-card ${isSelected ? 'selected' : ''}`}
-                  onClick={() => onSelectTag(tag)}
+                  onClick={() => isSelected ? onSelectTag(null) : onSelectTag(tag)}
                 >
                   <div className="tag-card-preview">
                     {meta.preview ? (
@@ -130,8 +130,8 @@ export default function TagsView({
         </div>
       </div>
 
-      <div className="tags-detail">
-        {selectedMeta ? (
+      {selectedMeta && (
+        <div className="tags-detail">
           <TagDetail
             tag={selectedTag}
             metadata={selectedMeta}
@@ -142,10 +142,8 @@ export default function TagsView({
             onDisableAll={onDisableAllInTag}
             onSearchInMods={onSearchInMods}
           />
-        ) : (
-          <div className="empty-panel">Select a tag to view details</div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -259,20 +257,25 @@ function TagDetail({
         </div>
       </div>
 
-      <div className="tag-exclusive-section">
-        <label className="checkbox-label">
-          <input
-            type="checkbox"
-            checked={mutuallyExclusive}
-            onChange={(e) => handleMutuallyExclusiveChange(e.target.checked)}
-          />
-          <span>Mutually Exclusive (Only one mod should be enabled)</span>
-        </label>
-        {mutuallyExclusive && status.status === 'conflict' && (
-          <div className="conflict-warning">
-            ⚠️ Multiple mods are enabled with this tag!
-          </div>
-        )}
+      <div className="tag-actions">
+        <button 
+          className="secondary-button"
+          onClick={() => onEnableAll(tag)}
+        >
+          <span>✓</span> Enable All
+        </button>
+        <button 
+          className="secondary-button"
+          onClick={() => onDisableAll(tag)}
+        >
+          <span>✗</span> Disable All
+        </button>
+        <button 
+          className="secondary-button"
+          onClick={() => onSearchInMods(tag)}
+        >
+          <span>🔍</span> Find in Mods
+        </button>
       </div>
 
       <div className="tag-description-section">
@@ -285,25 +288,23 @@ function TagDetail({
         />
       </div>
 
-      <div className="tag-actions">
-        <button 
-          className="secondary-button"
-          onClick={onEnableAll}
-        >
-          <span>✓</span> Enable All
-        </button>
-        <button 
-          className="secondary-button"
-          onClick={onDisableAll}
-        >
-          <span>✗</span> Disable All
-        </button>
-        <button 
-          className="secondary-button"
-          onClick={onSearchInMods}
-        >
-          <span>🔍</span> Find in Mods
-        </button>
+      <div className="tag-exclusive-section">
+        <label className="checkbox-label">
+          <input
+            type="checkbox"
+            checked={mutuallyExclusive}
+            onChange={(e) => handleMutuallyExclusiveChange(e.target.checked)}
+          />
+          <span>Mutually Exclusive</span>
+          <span className="tooltip-trigger" title="Only one mod with this tag should be enabled at a time">
+            ⓘ
+          </span>
+        </label>
+        {mutuallyExclusive && status.status === 'conflict' && (
+          <div className="conflict-warning">
+            ⚠️ Multiple mods are enabled with this tag!
+          </div>
+        )}
       </div>
     </div>
   );

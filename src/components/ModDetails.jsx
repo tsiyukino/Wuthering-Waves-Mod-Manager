@@ -96,24 +96,26 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
       <div className="panel-header">Preview</div>
       
       <div className="preview-section">
-        {mod.preview ? (
-          <img 
-            src={mod.preview} 
-            alt="Preview" 
-            className="preview-image"
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-          />
-        ) : (
-          <div 
-            className="preview-placeholder"
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-          >
-            <span style={{ fontSize: 48 }}>🖼️</span>
-            <span>Drag image here or click Upload</span>
-          </div>
-        )}
+        <div className="preview-image-container">
+          {mod.preview ? (
+            <img 
+              src={mod.preview} 
+              alt="Preview" 
+              className="preview-image"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            />
+          ) : (
+            <div 
+              className="preview-placeholder"
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+            >
+              <span style={{ fontSize: 48 }}>🖼️</span>
+              <span>Drag image here or click Upload</span>
+            </div>
+          )}
+        </div>
         
         <input
           ref={fileInputRef}

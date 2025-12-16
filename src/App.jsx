@@ -8,6 +8,7 @@ import Sidebar from "./components/Sidebar";
 import ManagerView from "./components/ManagerView";
 import SettingsView from "./components/SettingsView";
 import TagsView from "./components/TagsView";
+import CategoryTree from "./components/CategoryTree";
 import { PromptDialog, ConfirmDialog, DataMigrationDialog } from "./components/Dialog";
 
 import "./styles/app.css";
@@ -576,7 +577,7 @@ export default function App() {
       strategy: db.mod_strategy,
       disabledFolder: db.disabled_folder || "_Disabled"
     }).then(errors => {
-      if (errors.length > 0) {
+      if (errors && errors.length > 0) {
         alert("Some mods failed to enable:\n" + errors.join("\n"));
       }
       
@@ -604,7 +605,7 @@ export default function App() {
       strategy: db.mod_strategy,
       disabledFolder: db.disabled_folder || "_Disabled"
     }).then(errors => {
-      if (errors.length > 0) {
+      if (errors && errors.length > 0) {
         alert("Some mods failed to disable:\n" + errors.join("\n"));
       }
       
@@ -622,6 +623,14 @@ export default function App() {
   function handleSearchInMods(tagName) {
     setView("manager");
     setSearchQuery(tagName);
+    setSelectedTag(null);
+    setSelectedModId(null);
+  }
+
+  function handleClearSelections() {
+    setSelectedModId(null);
+    setSelectedTag(null);
+    setSelectedModIds([]);
   }
 
   function changeModStrategy(strategy) {
@@ -738,7 +747,11 @@ export default function App() {
 
   return (
     <div className="app">
-      <Sidebar view={view} onChangeView={setView} />
+      <Sidebar 
+        view={view} 
+        onChangeView={setView}
+        onClearSelections={handleClearSelections}
+      />
 
       <main className="main">
         {view === "manager" && (
@@ -845,23 +858,21 @@ export default function App() {
 
       {moveToDialog && (
         <div className="modal-overlay" onClick={() => setMoveToDialog(false)}>
-          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-dialog modal-dialog-tree" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Move to Category</h3>
               <button className="modal-close" onClick={() => setMoveToDialog(false)}>×</button>
             </div>
             
-            <div className="modal-body">
-              <div className="category-list">
-                {db.categories.map(cat => (
-                  <div 
-                    key={cat.id}
-                    className="category-option"
-                    onClick={() => handleMoveTo(cat.id)}
-                  >
-                    {cat.name}
-                  </div>
-                ))}
+            <div className="modal-body modal-body-tree">
+              <div className="move-to-tree">
+                <CategoryTree
+                  categories={db.categories}
+                  selectedId={null}
+                  onSelect={handleMoveTo}
+                  onToggle={toggleCategory}
+                  onDrop={null}
+                />
               </div>
             </div>
             
