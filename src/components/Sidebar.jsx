@@ -1,15 +1,29 @@
+import { useState } from "react";
+
 export default function Sidebar({ view, onChangeView }) {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
-    <aside className="sidebar">
-      <div className="logo">Mod Manager</div>
+    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+      <div className="sidebar-header">
+        {!collapsed && <div className="logo">Mod Manager</div>}
+        <button 
+          className="collapse-btn"
+          onClick={() => setCollapsed(!collapsed)}
+          title={collapsed ? "Expand" : "Collapse"}
+        >
+          {collapsed ? "☰" : "×"}
+        </button>
+      </div>
 
       <nav>
         <div
           className={`nav-item ${view === "manager" ? "active" : ""}`}
           onClick={() => onChangeView("manager")}
+          title="File Manager"
         >
           <span>📁</span>
-          <span>File Manager</span>
+          {!collapsed && <span>File Manager</span>}
         </div>
       </nav>
 
@@ -17,9 +31,10 @@ export default function Sidebar({ view, onChangeView }) {
         <div
           className={`nav-item ${view === "settings" ? "active" : ""}`}
           onClick={() => onChangeView("settings")}
+          title="Settings"
         >
           <span>⚙️</span>
-          <span>Settings</span>
+          {!collapsed && <span>Settings</span>}
         </div>
       </div>
     </aside>

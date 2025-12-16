@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { open } from '@tauri-apps/plugin-dialog';
 
 import Sidebar from "./components/Sidebar";
 import ManagerView from "./components/ManagerView";
@@ -113,24 +114,45 @@ export default function App() {
     });
   }
 
-  function addMod() {
-    const name = prompt("Mod name:");
-    if (!name) return;
+  async function addMod() {
+    try {
+      // Open folder picker
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: "Select Mod Folder"
+      });
 
-    persist({
-      ...db,
-      mods: [
-        ...db.mods,
-        {
-          id: Date.now(),
-          name,
-          category_id: selectedCategory,
-          enabled: false,
-          notes: "",
-          preview: null
-        }
-      ]
-    });
+      if (!selected) return;
+
+      // Extract folder name from path
+      const pathParts = selected.split(/[\\/]/);
+      const folderName = pathParts[pathParts.length - 1];
+
+      // Check if mod already exists
+      if (db.mods.some(m => m.name === folderName)) {
+        alert("A mod with this name already exists!");
+        return;
+      }
+
+      persist({
+        ...db,
+        mods: [
+          ...db.mods,
+          {
+            id: Date.now(),
+            name: folderName,
+            category_id: selectedCategory,
+            enabled: true,
+            notes: "",
+            preview: null
+          }
+        ]
+      });
+    } catch (err) {
+      console.error("Failed to add mod:", err);
+      alert("Failed to add mod: " + err);
+    }
   }
 
   function deleteMod() {
