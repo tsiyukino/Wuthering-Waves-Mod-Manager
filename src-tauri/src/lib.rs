@@ -23,14 +23,17 @@ pub struct Mod {
     pub enabled: bool,
     pub notes: String,
     pub preview: Option<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Database {
     pub root_folder: String,
+    pub disabled_folder: String,
     pub mod_strategy: String,
     pub categories: Vec<Category>,
     pub mods: Vec<Mod>,
+    pub tags: Vec<String>,
 }
 
 fn get_storage_location() -> String {
@@ -70,6 +73,7 @@ fn load_db() -> Result<Database, String> {
     if !path.exists() {
         let default = Database {
             root_folder: String::from("C:\\Games\\Mods"),
+            disabled_folder: String::from("_Disabled"),
             mod_strategy: String::from("wuthering_waves"),
             categories: vec![Category {
                 id: 1,
@@ -78,6 +82,7 @@ fn load_db() -> Result<Database, String> {
                 expanded: true,
             }],
             mods: vec![],
+            tags: vec![],
         };
         
         let json = serde_json::to_string_pretty(&default)
@@ -93,9 +98,12 @@ fn load_db() -> Result<Database, String> {
     let mut db: Database = serde_json::from_str(&content)
         .map_err(|e| e.to_string())?;
     
-    // Add mod_strategy if it doesn't exist (for backward compatibility)
+    // Add fields if they don't exist (for backward compatibility)
     if db.mod_strategy.is_empty() {
         db.mod_strategy = String::from("wuthering_waves");
+    }
+    if db.disabled_folder.is_empty() {
+        db.disabled_folder = String::from("_Disabled");
     }
     
     Ok(db)
@@ -112,16 +120,16 @@ fn save_db(db: Database) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn toggle_mod(root: String, name: String, enable: bool, strategy: String) -> Result<(), String> {
+fn toggle_mod(root: String, name: String, enable: bool, strategy: String, disabled_folder: String) -> Result<(), String> {
     let mod_path = Path::new(&root).join(&name);
     
-    if !mod_path.exists() {
+    if !mod_path.exists() && !enable {
         return Err(format!("Mod folder does not exist: {}", mod_path.display()));
     }
     
     match strategy.as_str() {
         "wuthering_waves" => toggle_wuthering_waves(&mod_path, enable),
-        "generic_rename" => toggle_generic_rename(&mod_path, enable),
+        "generic_rename" => toggle_generic_rename(&mod_path, enable, &root, &disabled_folder),
         _ => Err(format!("Unknown mod strategy: {}", strategy)),
     }
 }
@@ -130,29 +138,31 @@ fn toggle_wuthering_waves(mod_path: &Path, enable: bool) -> Result<(), String> {
     toggle_files_recursive(mod_path, enable, "ini")
 }
 
-fn toggle_generic_rename(mod_path: &Path, enable: bool) -> Result<(), String> {
-    // For generic strategy, rename the entire folder
-    let parent = mod_path.parent()
-        .ok_or_else(|| "Cannot get parent directory".to_string())?;
+fn toggle_generic_rename(mod_path: &Path, enable: bool, root: &str, disabled_folder: &str) -> Result<(), String> {
+    let root_path = Path::new(root);
+    let disabled_path = root_path.join(disabled_folder);
+    
+    // Ensure disabled folder exists
+    if !disabled_path.exists() {
+        fs::create_dir_all(&disabled_path)
+            .map_err(|e| format!("Failed to create disabled folder: {}", e))?;
+    }
     
     let folder_name = mod_path.file_name()
-        .ok_or_else(|| "Cannot get folder name".to_string())?
-        .to_string_lossy();
+        .ok_or_else(|| "Cannot get folder name".to_string())?;
     
     if enable {
-        // Remove .disabled suffix
-        if folder_name.ends_with(".disabled") {
-            let new_name = folder_name.trim_end_matches(".disabled");
-            let new_path = parent.join(new_name);
-            fs::rename(mod_path, &new_path)
+        // Move from disabled folder back to root
+        let source = disabled_path.join(folder_name);
+        if source.exists() {
+            fs::rename(&source, mod_path)
                 .map_err(|e| format!("Failed to enable mod: {}", e))?;
         }
     } else {
-        // Add .disabled suffix
-        if !folder_name.ends_with(".disabled") {
-            let new_name = format!("{}.disabled", folder_name);
-            let new_path = parent.join(new_name);
-            fs::rename(mod_path, &new_path)
+        // Move to disabled folder
+        let destination = disabled_path.join(folder_name);
+        if mod_path.exists() {
+            fs::rename(mod_path, &destination)
                 .map_err(|e| format!("Failed to disable mod: {}", e))?;
         }
     }
@@ -365,6 +375,44 @@ fn get_db_summary(location: String) -> Result<String, String> {
     
     serde_json::to_string_pretty(&summary)
         .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn toggle_mods_bulk(
+    root: String, 
+    mod_names: Vec<String>, 
+    enable: bool, 
+    strategy: String, 
+    disabled_folder: String
+) -> Result<Vec<String>, String> {
+    let mut errors = Vec::new();
+    
+    for name in mod_names {
+        if let Err(e) = toggle_mod(
+            root.clone(), 
+            name.clone(), 
+            enable, 
+            strategy.clone(), 
+            disabled_folder.clone()
+        ) {
+            errors.push(format!("{}: {}", name, e));
+        }
+    }
+    
+    Ok(errors)
+}
+
+#[tauri::command]
+fn delete_mods_bulk(root: String, mod_names: Vec<String>) -> Result<Vec<String>, String> {
+    let mut errors = Vec::new();
+    
+    for name in mod_names {
+        if let Err(e) = delete_mod(root.clone(), name.clone()) {
+            errors.push(format!("{}: {}", name, e));
+        }
+    }
+    
+    Ok(errors)
 }
 
 #[tauri::command]
@@ -594,6 +642,8 @@ pub fn run() {
             set_data_location,
             get_data_location,
             get_db_summary,
+            toggle_mods_bulk,
+            delete_mods_bulk,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

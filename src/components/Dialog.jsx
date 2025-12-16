@@ -211,3 +211,117 @@ export function DataMigrationDialog({
     </div>
   );
 }
+
+export function TagDialog({ isOpen, currentTags, allTags, onConfirm, onCancel }) {
+  const [inputValue, setInputValue] = React.useState("");
+  const [selectedTags, setSelectedTags] = React.useState([]);
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const inputRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      setSelectedTags([...currentTags]);
+      setInputValue("");
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+  }, [isOpen, currentTags]);
+
+  if (!isOpen) return null;
+
+  const suggestions = allTags.filter(tag => 
+    tag.toLowerCase().includes(inputValue.toLowerCase()) &&
+    !selectedTags.includes(tag)
+  );
+
+  function addTag(tag) {
+    if (tag && !selectedTags.includes(tag)) {
+      setSelectedTags([...selectedTags, tag]);
+    }
+    setInputValue("");
+    setShowSuggestions(false);
+  }
+
+  function removeTag(tag) {
+    setSelectedTags(selectedTags.filter(t => t !== tag));
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (inputValue.trim()) {
+        addTag(inputValue.trim());
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onCancel}>
+      <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Manage Tags</h3>
+          <button className="modal-close" onClick={onCancel}>×</button>
+        </div>
+        
+        <div className="modal-body">
+          <div className="tag-input-container">
+            <input
+              ref={inputRef}
+              type="text"
+              className="modal-input"
+              placeholder="Type tag name..."
+              value={inputValue}
+              onChange={(e) => {
+                setInputValue(e.target.value);
+                setShowSuggestions(true);
+              }}
+              onKeyDown={handleKeyDown}
+              onFocus={() => setShowSuggestions(true)}
+            />
+            
+            {showSuggestions && suggestions.length > 0 && (
+              <div className="tag-suggestions">
+                {suggestions.map(tag => (
+                  <div 
+                    key={tag}
+                    className="tag-suggestion"
+                    onClick={() => addTag(tag)}
+                  >
+                    {tag}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="selected-tags">
+            {selectedTags.map(tag => (
+              <div key={tag} className="tag-chip">
+                {tag}
+                <button 
+                  className="tag-remove"
+                  onClick={() => removeTag(tag)}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {selectedTags.length === 0 && (
+              <div className="empty-tags">No tags selected</div>
+            )}
+          </div>
+        </div>
+        
+        <div className="modal-footer">
+          <button className="modal-btn-cancel" onClick={onCancel}>
+            Cancel
+          </button>
+          <button className="modal-btn-confirm" onClick={() => onConfirm(selectedTags)}>
+            Save
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

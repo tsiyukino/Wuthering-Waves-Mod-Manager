@@ -8,17 +8,29 @@ export default function ManagerView({
   mods,
   selectedCategory,
   selectedMod,
+  selectedModIds,
+  searchQuery,
   onSelectCategory,
   onToggleCategory,
   onAddCategory,
   onDeleteCategory,
   onToggleMod,
   onSelectMod,
+  onMultiSelect,
+  onSelectAll,
+  onDeselectAll,
   onAddMod,
   onDeleteMod,
+  onBulkEnable,
+  onBulkDisable,
+  onBulkDelete,
+  onManageTags,
   onUpdateNotes,
   onUploadPreview,
-  onMoveModToCategory
+  onUpdateTags,
+  onUpdateName,
+  onMoveModToCategory,
+  onSearchChange
 }) {
   const [leftWidth, setLeftWidth] = useState(300);
   const [rightWidth, setRightWidth] = useState(400);
@@ -103,30 +115,73 @@ export default function ManagerView({
 
         <ModList
           mods={mods}
+          categories={categories}
           selectedCategory={selectedCategory}
           selectedModId={selectedMod?.id}
+          selectedModIds={selectedModIds}
+          searchQuery={searchQuery}
           onToggleMod={onToggleMod}
           onSelectMod={onSelectMod}
+          onMultiSelect={onMultiSelect}
+          onSearchChange={onSearchChange}
         />
 
         <div className="panel-actions">
-          <button className="secondary-button" onClick={onAddMod}>
-            <span>➕</span> Add File
-          </button>
-          <button 
-            className="secondary-button" 
-            onClick={() => onToggleMod(selectedMod)}
-            disabled={!selectedMod}
-          >
-            {selectedMod?.enabled ? "Disable" : "Enable"}
-          </button>
-          <button 
-            className="secondary-button" 
-            onClick={onDeleteMod}
-            disabled={!selectedMod}
-          >
-            <span>🗑️</span> Delete
-          </button>
+          {selectedModIds.length > 0 ? (
+            <>
+              <div className="bulk-info">
+                {selectedModIds.length} selected
+              </div>
+              <button className="secondary-button" onClick={onSelectAll}>
+                Select All
+              </button>
+              <button className="secondary-button" onClick={onDeselectAll}>
+                Deselect
+              </button>
+              <button className="secondary-button" onClick={onBulkEnable}>
+                Enable Selected
+              </button>
+              <button className="secondary-button" onClick={onBulkDisable}>
+                Disable Selected
+              </button>
+              <button className="secondary-button" onClick={onManageTags}>
+                <span>📁</span> Move To...
+              </button>
+              <button className="secondary-button" onClick={onBulkDelete}>
+                <span>🗑️</span> Delete Selected
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="secondary-button" onClick={onAddMod}>
+                <span>➕</span> Add File
+              </button>
+              <button className="secondary-button" onClick={onSelectAll}>
+                Select All
+              </button>
+              <button 
+                className="secondary-button" 
+                onClick={() => onToggleMod(selectedMod)}
+                disabled={!selectedMod}
+              >
+                {selectedMod?.enabled ? "Disable" : "Enable"}
+              </button>
+              <button 
+                className="secondary-button" 
+                onClick={onManageTags}
+                disabled={!selectedMod}
+              >
+                <span>📁</span> Move To...
+              </button>
+              <button 
+                className="secondary-button" 
+                onClick={onDeleteMod}
+                disabled={!selectedMod}
+              >
+                <span>🗑️</span> Delete
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -135,13 +190,14 @@ export default function ManagerView({
         onMouseDown={() => setIsResizingRight(true)}
       />
 
-      <div className="right-panel" style={{ width: rightWidth }}>
-        <ModDetails
-          mod={selectedMod}
-          onUpdateNotes={onUpdateNotes}
-          onUploadPreview={onUploadPreview}
-        />
-      </div>
+      <ModDetails
+        mod={selectedMod}
+        allTags={mods.flatMap(m => m.tags || []).filter((v, i, a) => a.indexOf(v) === i)}
+        onUpdateNotes={onUpdateNotes}
+        onUploadPreview={onUploadPreview}
+        onUpdateTags={onUpdateTags}
+        onUpdateName={onUpdateName}
+      />
     </div>
   );
 }

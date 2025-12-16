@@ -1,11 +1,13 @@
 export default function SettingsView({ 
   rootFolder, 
-  modStrategy, 
+  modStrategy,
+  disabledFolder,
   dataLocation,
   appdataPath,
   localPath,
   onChangeRoot, 
   onChangeStrategy,
+  onChangeDisabledFolder,
   onChangeDataLocation 
 }) {
   return (
@@ -34,14 +36,30 @@ export default function SettingsView({
           onChange={e => onChangeStrategy(e.target.value)}
         >
           <option value="wuthering_waves">Wuthering Waves (Rename .ini files)</option>
-          <option value="generic_rename">Generic (Rename folder)</option>
+          <option value="generic_rename">Generic (Move to disabled folder)</option>
         </select>
         <div className="setting-description">
           <strong>Wuthering Waves:</strong> Adds/removes .bak extension to all .ini files in the mod folder
           <br />
-          <strong>Generic:</strong> Adds/removes .disabled extension to the entire mod folder
+          <strong>Generic:</strong> Moves mod folder to/from the disabled folder
         </div>
       </div>
+
+      {modStrategy === "generic_rename" && (
+        <div className="setting-group">
+          <label>Disabled Mods Folder Name</label>
+          <input
+            type="text"
+            className="text-input"
+            value={disabledFolder}
+            onChange={e => onChangeDisabledFolder(e.target.value)}
+            placeholder="_Disabled"
+          />
+          <div className="setting-hint">
+            Folder name (inside root folder) where disabled mods are moved to.
+          </div>
+        </div>
+      )}
 
       <div className="setting-group">
         <label>Data Storage Location</label>

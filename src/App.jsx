@@ -16,6 +16,8 @@ export default function App() {
   const [view, setView] = useState("manager");
   const [selectedCategory, setSelectedCategory] = useState(1);
   const [selectedModId, setSelectedModId] = useState(null);
+  const [selectedModIds, setSelectedModIds] = useState([]); // Multi-select
+  const [searchQuery, setSearchQuery] = useState("");
   
   // Data location states
   const [dataLocation, setDataLocation] = useState("appdata");
@@ -27,6 +29,7 @@ export default function App() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [migrationDialog, setMigrationDialog] = useState(null);
   const [restartDialog, setRestartDialog] = useState(false);
+  const [moveToDialog, setMoveToDialog] = useState(false);
   
   // Progress states
   const [isProcessing, setIsProcessing] = useState(false);
@@ -166,7 +169,8 @@ export default function App() {
       root: db.root_folder,
       name: mod.name,
       enable: !mod.enabled,
-      strategy: db.mod_strategy
+      strategy: db.mod_strategy,
+      disabledFolder: db.disabled_folder || "_Disabled"
     });
 
     persist({
@@ -251,7 +255,8 @@ export default function App() {
             category_id: selectedCategory,
             enabled: true,
             notes: "",
-            preview: null
+            preview: null,
+            tags: []
           }
         ]
       });
@@ -342,6 +347,181 @@ export default function App() {
 
   function selectMod(mod) {
     setSelectedModId(mod ? mod.id : null);
+  }
+
+  function handleMultiSelect(modId) {
+    if (selectedModIds.includes(modId)) {
+      setSelectedModIds(selectedModIds.filter(id => id !== modId));
+    } else {
+      setSelectedModIds([...selectedModIds, modId]);
+    }
+  }
+
+  function handleSelectAll() {
+    const visibleMods = db.mods.filter(m => m.category_id === selectedCategory);
+    const visibleIds = visibleMods.map(m => m.id);
+    setSelectedModIds(visibleIds);
+  }
+
+  function handleDeselectAll() {
+    setSelectedModIds([]);
+  }
+
+  async function handleBulkEnable() {
+    if (selectedModIds.length === 0) return;
+    
+    const modNames = db.mods
+      .filter(m => selectedModIds.includes(m.id))
+      .map(m => m.name);
+    
+    try {
+      const errors = await invoke("toggle_mods_bulk", {
+        root: db.root_folder,
+        modNames: modNames,
+        enable: true,
+        strategy: db.mod_strategy,
+        disabledFolder: db.disabled_folder || "_Disabled"
+      });
+      
+      if (errors.length > 0) {
+        alert("Some mods failed to enable:\n" + errors.join("\n"));
+      }
+      
+      persist({
+        ...db,
+        mods: db.mods.map(m =>
+          selectedModIds.includes(m.id) ? { ...m, enabled: true } : m
+        )
+      });
+      
+      setSelectedModIds([]);
+    } catch (err) {
+      alert("Bulk enable failed: " + err);
+    }
+  }
+
+  async function handleBulkDisable() {
+    if (selectedModIds.length === 0) return;
+    
+    const modNames = db.mods
+      .filter(m => selectedModIds.includes(m.id))
+      .map(m => m.name);
+    
+    try {
+      const errors = await invoke("toggle_mods_bulk", {
+        root: db.root_folder,
+        modNames: modNames,
+        enable: false,
+        strategy: db.mod_strategy,
+        disabledFolder: db.disabled_folder || "_Disabled"
+      });
+      
+      if (errors.length > 0) {
+        alert("Some mods failed to disable:\n" + errors.join("\n"));
+      }
+      
+      persist({
+        ...db,
+        mods: db.mods.map(m =>
+          selectedModIds.includes(m.id) ? { ...m, enabled: false } : m
+        )
+      });
+      
+      setSelectedModIds([]);
+    } catch (err) {
+      alert("Bulk disable failed: " + err);
+    }
+  }
+
+  function handleBulkDelete() {
+    if (selectedModIds.length === 0) return;
+    
+    setDeleteConfirm({
+      title: "Delete Multiple Mods",
+      message: `Delete ${selectedModIds.length} mods permanently?`,
+      onConfirm: async () => {
+        const modNames = db.mods
+          .filter(m => selectedModIds.includes(m.id))
+          .map(m => m.name);
+        
+        try {
+          const errors = await invoke("delete_mods_bulk", {
+            root: db.root_folder,
+            modNames: modNames
+          });
+          
+          if (errors.length > 0) {
+            alert("Some mods failed to delete:\n" + errors.join("\n"));
+          }
+          
+          persist({
+            ...db,
+            mods: db.mods.filter(m => !selectedModIds.includes(m.id))
+          });
+          
+          setSelectedModIds([]);
+          setDeleteConfirm(null);
+        } catch (err) {
+          alert("Bulk delete failed: " + err);
+        }
+      }
+    });
+  }
+
+  function handleManageTags() {
+    setMoveToDialog(true);
+  }
+
+  function handleMoveTo(targetCategoryId) {
+    if (selectedModIds.length > 0) {
+      // Bulk move
+      persist({
+        ...db,
+        mods: db.mods.map(m =>
+          selectedModIds.includes(m.id) ? { ...m, category_id: targetCategoryId } : m
+        )
+      });
+      setSelectedModIds([]);
+    } else if (selectedModId) {
+      // Single move
+      persist({
+        ...db,
+        mods: db.mods.map(m =>
+          m.id === selectedModId ? { ...m, category_id: targetCategoryId } : m
+        )
+      });
+    }
+    
+    setMoveToDialog(false);
+  }
+
+  function updateName(newName) {
+    if (!selectedModId) return;
+    
+    persist({
+      ...db,
+      mods: db.mods.map(m =>
+        m.id === selectedModId ? { ...m, name: newName } : m
+      )
+    });
+  }
+
+  function updateTags(newTags) {
+    if (!selectedModId) return;
+    
+    const updatedMods = db.mods.map(m =>
+      m.id === selectedModId ? { ...m, tags: newTags } : m
+    );
+    
+    // Update global tags list
+    const allTags = new Set(db.tags || []);
+    newTags.forEach(tag => allTags.add(tag));
+    
+    persist({
+      ...db,
+      mods: updatedMods,
+      tags: Array.from(allTags)
+    });
   }
 
   function changeModStrategy(strategy) {
@@ -467,17 +647,29 @@ export default function App() {
             mods={db.mods}
             selectedCategory={selectedCategory}
             selectedMod={selectedMod}
+            selectedModIds={selectedModIds}
+            searchQuery={searchQuery}
             onSelectCategory={setSelectedCategory}
             onToggleCategory={toggleCategory}
             onAddCategory={addCategory}
             onDeleteCategory={deleteCategory}
             onToggleMod={toggleMod}
             onSelectMod={selectMod}
+            onMultiSelect={handleMultiSelect}
+            onSelectAll={handleSelectAll}
+            onDeselectAll={handleDeselectAll}
             onAddMod={addMod}
             onDeleteMod={deleteMod}
+            onBulkEnable={handleBulkEnable}
+            onBulkDisable={handleBulkDisable}
+            onBulkDelete={handleBulkDelete}
+            onManageTags={handleManageTags}
             onUpdateNotes={updateNotes}
             onUploadPreview={uploadPreview}
+            onUpdateTags={updateTags}
+            onUpdateName={updateName}
             onMoveModToCategory={moveModToCategory}
+            onSearchChange={setSearchQuery}
           />
         )}
 
@@ -485,6 +677,7 @@ export default function App() {
           <SettingsView
             rootFolder={db.root_folder}
             modStrategy={db.mod_strategy}
+            disabledFolder={db.disabled_folder || "_Disabled"}
             dataLocation={dataLocation}
             appdataPath={appdataPath}
             localPath={localPath}
@@ -492,6 +685,9 @@ export default function App() {
               persist({ ...db, root_folder: value })
             }
             onChangeStrategy={changeModStrategy}
+            onChangeDisabledFolder={(value) =>
+              persist({ ...db, disabled_folder: value })
+            }
             onChangeDataLocation={changeDataLocation}
           />
         )}
@@ -530,6 +726,37 @@ export default function App() {
         onConfirm={handleRestart}
         onCancel={() => setRestartDialog(false)}
       />
+
+      {moveToDialog && (
+        <div className="modal-overlay" onClick={() => setMoveToDialog(false)}>
+          <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Move to Category</h3>
+              <button className="modal-close" onClick={() => setMoveToDialog(false)}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="category-list">
+                {db.categories.map(cat => (
+                  <div 
+                    key={cat.id}
+                    className="category-option"
+                    onClick={() => handleMoveTo(cat.id)}
+                  >
+                    {cat.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="modal-btn-cancel" onClick={() => setMoveToDialog(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isProcessing && (
         <div className="progress-overlay">
