@@ -8,16 +8,6 @@
   "productName": "wwmm",
   "version": "0.1.0",
   "identifier": "com.wwmm.dev",
-  "plugins": {
-    "opener": {},
-    "dialog": {
-      "open": true,
-      "save": true,
-      "message": true,
-      "ask": true,
-      "confirm": true
-    }
-  },
   "app": {
     "security": {
       "csp": null

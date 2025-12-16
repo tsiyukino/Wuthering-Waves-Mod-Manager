@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from '@tauri-apps/plugin-dialog';
+import { listen } from '@tauri-apps/api/event';
 
 import Sidebar from "./components/Sidebar";
 import ManagerView from "./components/ManagerView";
@@ -18,6 +19,11 @@ export default function App() {
   // Dialog states
   const [categoryPrompt, setCategoryPrompt] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  
+  // Progress states
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [progressMessage, setProgressMessage] = useState("");
+  const [progressPercent, setProgressPercent] = useState(0);
 
   useEffect(() => {
     invoke("load_db").then(async (loadedDb) => {
@@ -37,6 +43,33 @@ export default function App() {
       );
       setDb({ ...loadedDb, mods: modsWithPreviews });
     });
+
+    // Listen for progress events
+    const unlistenExtract = listen('extract-progress', (event) => {
+      setProgressPercent(event.payload);
+      setProgressMessage(`Extracting... ${event.payload}%`);
+    });
+
+    const unlistenExtractComplete = listen('extract-complete', () => {
+      setIsProcessing(false);
+      setProgressMessage("");
+    });
+
+    const unlistenCopy = listen('copy-progress', (event) => {
+      setProgressMessage(event.payload);
+    });
+
+    const unlistenCopyComplete = listen('copy-complete', () => {
+      setIsProcessing(false);
+      setProgressMessage("");
+    });
+
+    return () => {
+      unlistenExtract.then(fn => fn());
+      unlistenExtractComplete.then(fn => fn());
+      unlistenCopy.then(fn => fn());
+      unlistenCopyComplete.then(fn => fn());
+    };
   }, []);
 
   if (!db) return null;
@@ -113,7 +146,8 @@ export default function App() {
     invoke("toggle_mod", {
       root: db.root_folder,
       name: mod.name,
-      enable: !mod.enabled
+      enable: !mod.enabled,
+      strategy: db.mod_strategy
     });
 
     persist({
@@ -125,19 +159,32 @@ export default function App() {
   }
 
   async function addMod() {
+    if (isProcessing) return;
+    
     try {
-      // Open folder picker
+      // Open file/folder picker for both folders and archives
       const selected = await open({
-        directory: true,
         multiple: false,
-        title: "Select Mod Folder"
+        title: "Select Mod Folder or ZIP Archive",
+        filters: [{
+          name: 'Mod Files',
+          extensions: ['zip']
+        }]
       });
 
       if (!selected) return;
 
+      // Check if it's a ZIP file
+      const isZip = selected.toLowerCase().endsWith('.zip');
+      
       // Extract folder name from path
       const pathParts = selected.split(/[\\/]/);
-      const folderName = pathParts[pathParts.length - 1];
+      let folderName = pathParts[pathParts.length - 1];
+      
+      // Remove .zip extension if present
+      if (isZip) {
+        folderName = folderName.replace(/\.zip$/i, '');
+      }
 
       // Check if mod already exists
       if (db.mods.some(m => m.name === folderName)) {
@@ -145,6 +192,36 @@ export default function App() {
         return;
       }
 
+      // Show processing indicator
+      setIsProcessing(true);
+      setProgressMessage(isZip ? "Extracting archive..." : "Copying folder...");
+      setProgressPercent(0);
+
+      // Handle ZIP extraction or folder copy
+      try {
+        if (isZip) {
+          await invoke("extract_archive", {
+            archivePath: selected,
+            destRoot: db.root_folder,
+            destName: folderName
+          });
+        } else {
+          await invoke("copy_mod", {
+            source: selected,
+            destRoot: db.root_folder,
+            destName: folderName
+          });
+        }
+      } catch (copyErr) {
+        setIsProcessing(false);
+        alert("Failed to " + (isZip ? "extract" : "copy") + " mod: " + copyErr);
+        return;
+      }
+
+      setIsProcessing(false);
+      setProgressMessage("");
+
+      // Add to database
       persist({
         ...db,
         mods: [
@@ -160,6 +237,7 @@ export default function App() {
         ]
       });
     } catch (err) {
+      setIsProcessing(false);
       console.error("Failed to add mod:", err);
       alert("Failed to add mod: " + err);
     }
@@ -247,6 +325,13 @@ export default function App() {
     setSelectedModId(mod ? mod.id : null);
   }
 
+  function changeModStrategy(strategy) {
+    persist({
+      ...db,
+      mod_strategy: strategy
+    });
+  }
+
   return (
     <div className="app">
       <Sidebar view={view} onChangeView={setView} />
@@ -275,9 +360,11 @@ export default function App() {
         {view === "settings" && (
           <SettingsView
             rootFolder={db.root_folder}
+            modStrategy={db.mod_strategy}
             onChangeRoot={(value) =>
               persist({ ...db, root_folder: value })
             }
+            onChangeStrategy={changeModStrategy}
           />
         )}
       </main>
@@ -297,6 +384,20 @@ export default function App() {
         onConfirm={deleteConfirm?.onConfirm}
         onCancel={() => setDeleteConfirm(null)}
       />
+
+      {isProcessing && (
+        <div className="progress-overlay">
+          <div className="progress-dialog">
+            <div className="progress-spinner"></div>
+            <div className="progress-text">{progressMessage}</div>
+            {progressPercent > 0 && (
+              <div className="progress-bar">
+                <div className="progress-fill" style={{ width: `${progressPercent}%` }}></div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

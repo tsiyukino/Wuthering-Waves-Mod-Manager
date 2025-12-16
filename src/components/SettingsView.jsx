@@ -1,4 +1,4 @@
-export default function SettingsView({ rootFolder, onChangeRoot }) {
+export default function SettingsView({ rootFolder, modStrategy, onChangeRoot, onChangeStrategy }) {
   return (
     <div className="settings-view">
       <h2>Settings</h2>
@@ -12,6 +12,23 @@ export default function SettingsView({ rootFolder, onChangeRoot }) {
           onChange={e => onChangeRoot(e.target.value)}
           placeholder="C:\Games\Mods"
         />
+      </div>
+
+      <div className="setting-group">
+        <label>Mod Management Strategy</label>
+        <select
+          className="text-input"
+          value={modStrategy}
+          onChange={e => onChangeStrategy(e.target.value)}
+        >
+          <option value="wuthering_waves">Wuthering Waves (Rename .ini files)</option>
+          <option value="generic_rename">Generic (Rename folder)</option>
+        </select>
+        <div className="setting-description">
+          <strong>Wuthering Waves:</strong> Adds/removes .bak extension to all .ini files in the mod folder
+          <br />
+          <strong>Generic:</strong> Adds/removes .disabled extension to the entire mod folder
+        </div>
       </div>
     </div>
   );
