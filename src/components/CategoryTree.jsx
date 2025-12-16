@@ -3,9 +3,25 @@ function CategoryNode({
   categories,
   selectedId,
   onSelect,
-  onToggle
+  onToggle,
+  onDrop
 }) {
   const children = categories.filter(c => c.parent_id === category.id);
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const modId = parseInt(e.dataTransfer.getData("modId"));
+    if (modId && onDrop) {
+      onDrop(modId, category.id);
+    }
+  }
 
   return (
     <div>
@@ -15,15 +31,21 @@ function CategoryNode({
           (selectedId === category.id ? " selected" : "")
         }
         onClick={() => onSelect(category.id)}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
       >
         {children.length > 0 && (
-          <span onClick={(e) => {
-            e.stopPropagation();
-            onToggle(category.id);
-          }}>
+          <span
+            className="expand-icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle(category.id);
+            }}
+          >
             {category.expanded ? "▼ " : "▶ "}
           </span>
         )}
+        <span className="folder-icon">📁 </span>
         {category.name}
       </div>
 
@@ -37,6 +59,7 @@ function CategoryNode({
               selectedId={selectedId}
               onSelect={onSelect}
               onToggle={onToggle}
+              onDrop={onDrop}
             />
           ))}
         </div>

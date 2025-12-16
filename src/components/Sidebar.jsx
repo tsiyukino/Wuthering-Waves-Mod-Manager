@@ -1,15 +1,27 @@
 export default function Sidebar({ view, onChangeView }) {
   return (
     <aside className="sidebar">
-      <h1>WWMM</h1>
+      <div className="logo">Mod Manager</div>
 
-      <button onClick={() => onChangeView("manager")}>
-        Manager
-      </button>
+      <nav>
+        <div
+          className={`nav-item ${view === "manager" ? "active" : ""}`}
+          onClick={() => onChangeView("manager")}
+        >
+          <span>📁</span>
+          <span>File Manager</span>
+        </div>
+      </nav>
 
-      <button onClick={() => onChangeView("settings")}>
-        Settings
-      </button>
+      <div className="sidebar-footer">
+        <div
+          className={`nav-item ${view === "settings" ? "active" : ""}`}
+          onClick={() => onChangeView("settings")}
+        >
+          <span>⚙️</span>
+          <span>Settings</span>
+        </div>
+      </div>
     </aside>
   );
 }

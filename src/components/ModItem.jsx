@@ -1,21 +1,26 @@
-export default function ModItem({ mod, onToggle, onSelect }) {
+export default function ModItem({ mod, selected, onToggle, onSelect }) {
+  function handleDragStart(e) {
+    e.dataTransfer.setData("modId", mod.id.toString());
+  }
+
   return (
     <div
       className={
-        "mod-item" + (mod.enabled ? "" : " disabled")
+        "file-item" + 
+        (selected ? " selected" : "")
       }
       onClick={() => onSelect(mod)}
+      draggable
+      onDragStart={handleDragStart}
     >
-      <span>{mod.name}</span>
+      <div className="file-info">
+        <div className="file-name">{mod.name}</div>
+        <div className="file-path">{mod.name}</div>
+      </div>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle(mod);
-        }}
-      >
-        {mod.enabled ? "Disable" : "Enable"}
-      </button>
+      <div className={`status-badge ${mod.enabled ? "enabled" : "disabled"}`}>
+        {mod.enabled ? "Enabled" : "Disabled"}
+      </div>
     </div>
   );
 }

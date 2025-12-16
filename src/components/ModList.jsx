@@ -3,6 +3,7 @@ import ModItem from "./ModItem";
 export default function ModList({
   mods,
   selectedCategory,
+  selectedModId,
   onToggleMod,
   onSelectMod
 }) {
@@ -11,19 +12,20 @@ export default function ModList({
   );
 
   if (visible.length === 0) {
-    return <div>No mods in this category.</div>;
+    return <div className="empty-message">No mods in this category.</div>;
   }
 
   return (
-    <>
+    <div className="file-list">
       {visible.map(mod => (
         <ModItem
           key={mod.id}
           mod={mod}
+          selected={mod.id === selectedModId}
           onToggle={onToggleMod}
           onSelect={onSelectMod}
         />
       ))}
-    </>
+    </div>
   );
 }
