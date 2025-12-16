@@ -5,6 +5,7 @@ import { open } from '@tauri-apps/plugin-dialog';
 import Sidebar from "./components/Sidebar";
 import ManagerView from "./components/ManagerView";
 import SettingsView from "./components/SettingsView";
+import { PromptDialog, ConfirmDialog } from "./components/Dialog";
 
 import "./styles/app.css";
 
@@ -13,6 +14,10 @@ export default function App() {
   const [view, setView] = useState("manager");
   const [selectedCategory, setSelectedCategory] = useState(1);
   const [selectedModId, setSelectedModId] = useState(null);
+  
+  // Dialog states
+  const [categoryPrompt, setCategoryPrompt] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
     invoke("load_db").then(async (loadedDb) => {
@@ -56,9 +61,11 @@ export default function App() {
   }
 
   function addCategory() {
-    const name = prompt("Enter category name:");
-    if (!name) return;
+    setCategoryPrompt(true);
+  }
 
+  function handleCategoryConfirm(name) {
+    setCategoryPrompt(false);
     const newId = Math.max(...db.categories.map(c => c.id), 0) + 1;
     persist({
       ...db,
@@ -80,23 +87,26 @@ export default function App() {
       return;
     }
 
-    if (!confirm("Delete this category? Files will be moved to parent.")) {
-      return;
-    }
+    setDeleteConfirm({
+      title: "Delete Category",
+      message: "Delete this category? Files will be moved to parent.",
+      onConfirm: () => {
+        const category = db.categories.find(c => c.id === selectedCategory);
+        
+        persist({
+          ...db,
+          categories: db.categories.filter(c => c.id !== selectedCategory),
+          mods: db.mods.map(m =>
+            m.category_id === selectedCategory
+              ? { ...m, category_id: category.parent_id }
+              : m
+          )
+        });
 
-    const category = db.categories.find(c => c.id === selectedCategory);
-    
-    persist({
-      ...db,
-      categories: db.categories.filter(c => c.id !== selectedCategory),
-      mods: db.mods.map(m =>
-        m.category_id === selectedCategory
-          ? { ...m, category_id: category.parent_id }
-          : m
-      )
+        setSelectedCategory(category.parent_id);
+        setDeleteConfirm(null);
+      }
     });
-
-    setSelectedCategory(category.parent_id);
   }
 
   function toggleMod(mod) {
@@ -159,21 +169,25 @@ export default function App() {
     if (!selectedModId) return;
     
     const mod = db.mods.find(m => m.id === selectedModId);
-    if (!confirm(`Delete mod "${mod.name}" permanently?`)) {
-      return;
-    }
+    
+    setDeleteConfirm({
+      title: "Delete Mod",
+      message: `Delete mod "${mod.name}" permanently?`,
+      onConfirm: () => {
+        invoke("delete_mod", {
+          root: db.root_folder,
+          name: mod.name
+        }).catch(err => alert("Error deleting mod: " + err));
 
-    invoke("delete_mod", {
-      root: db.root_folder,
-      name: mod.name
-    }).catch(err => alert("Error deleting mod: " + err));
+        persist({
+          ...db,
+          mods: db.mods.filter(m => m.id !== selectedModId)
+        });
 
-    persist({
-      ...db,
-      mods: db.mods.filter(m => m.id !== selectedModId)
+        setSelectedModId(null);
+        setDeleteConfirm(null);
+      }
     });
-
-    setSelectedModId(null);
   }
 
   function updateNotes(text) {
@@ -267,6 +281,22 @@ export default function App() {
           />
         )}
       </main>
+
+      <PromptDialog
+        isOpen={categoryPrompt}
+        title="New Category"
+        placeholder="Enter category name"
+        onConfirm={handleCategoryConfirm}
+        onCancel={() => setCategoryPrompt(false)}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title={deleteConfirm?.title}
+        message={deleteConfirm?.message}
+        onConfirm={deleteConfirm?.onConfirm}
+        onCancel={() => setDeleteConfirm(null)}
+      />
     </div>
   );
 }

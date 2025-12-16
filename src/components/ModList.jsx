@@ -11,21 +11,23 @@ export default function ModList({
     m => m.category_id === selectedCategory
   );
 
-  if (visible.length === 0) {
-    return <div className="empty-message">No mods in this category.</div>;
-  }
-
   return (
-    <div className="file-list">
-      {visible.map(mod => (
-        <ModItem
-          key={mod.id}
-          mod={mod}
-          selected={mod.id === selectedModId}
-          onToggle={onToggleMod}
-          onSelect={onSelectMod}
-        />
-      ))}
-    </div>
+    <>
+      <div className="file-list">
+        {visible.length === 0 ? (
+          <div className="empty-message">No mods in this category.</div>
+        ) : (
+          visible.map(mod => (
+            <ModItem
+              key={mod.id}
+              mod={mod}
+              selected={mod.id === selectedModId}
+              onToggle={onToggleMod}
+              onSelect={onSelectMod}
+            />
+          ))
+        )}
+      </div>
+    </>
   );
 }
