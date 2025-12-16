@@ -25,6 +25,15 @@ export default function Sidebar({ view, onChangeView }) {
           <span>📁</span>
           {!collapsed && <span>File Manager</span>}
         </div>
+
+        <div
+          className={`nav-item ${view === "tags" ? "active" : ""}`}
+          onClick={() => onChangeView("tags")}
+          title="Tags"
+        >
+          <span>🏷️</span>
+          {!collapsed && <span>Tags</span>}
+        </div>
       </nav>
 
       <div className="sidebar-footer">

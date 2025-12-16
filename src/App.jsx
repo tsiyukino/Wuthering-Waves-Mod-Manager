@@ -7,6 +7,7 @@ import { relaunch } from '@tauri-apps/plugin-process';
 import Sidebar from "./components/Sidebar";
 import ManagerView from "./components/ManagerView";
 import SettingsView from "./components/SettingsView";
+import TagsView from "./components/TagsView";
 import { PromptDialog, ConfirmDialog, DataMigrationDialog } from "./components/Dialog";
 
 import "./styles/app.css";
@@ -18,6 +19,8 @@ export default function App() {
   const [selectedModId, setSelectedModId] = useState(null);
   const [selectedModIds, setSelectedModIds] = useState([]); // Multi-select
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState(null);
+  const [tagSearchQuery, setTagSearchQuery] = useState("");
   
   // Data location states
   const [dataLocation, setDataLocation] = useState("appdata");
@@ -544,6 +547,83 @@ export default function App() {
     });
   }
 
+  function updateTagMetadata(tagName, newMetadata) {
+    const existingIndex = db.tag_metadata?.findIndex(tm => tm.name === tagName) ?? -1;
+    let updatedMetadata = [...(db.tag_metadata || [])];
+    
+    if (existingIndex >= 0) {
+      updatedMetadata[existingIndex] = newMetadata;
+    } else {
+      updatedMetadata.push(newMetadata);
+    }
+    
+    persist({
+      ...db,
+      tag_metadata: updatedMetadata
+    });
+  }
+
+  function handleEnableAllInTag(tagName) {
+    const modsWithTag = db.mods.filter(m => m.tags && m.tags.includes(tagName));
+    const modNames = modsWithTag.map(m => m.name);
+    
+    if (modNames.length === 0) return;
+    
+    invoke("toggle_mods_bulk", {
+      root: db.root_folder,
+      modNames: modNames,
+      enable: true,
+      strategy: db.mod_strategy,
+      disabledFolder: db.disabled_folder || "_Disabled"
+    }).then(errors => {
+      if (errors.length > 0) {
+        alert("Some mods failed to enable:\n" + errors.join("\n"));
+      }
+      
+      persist({
+        ...db,
+        mods: db.mods.map(m =>
+          modsWithTag.find(mt => mt.id === m.id) ? { ...m, enabled: true } : m
+        )
+      });
+    }).catch(err => {
+      alert("Failed to enable mods: " + err);
+    });
+  }
+
+  function handleDisableAllInTag(tagName) {
+    const modsWithTag = db.mods.filter(m => m.tags && m.tags.includes(tagName));
+    const modNames = modsWithTag.map(m => m.name);
+    
+    if (modNames.length === 0) return;
+    
+    invoke("toggle_mods_bulk", {
+      root: db.root_folder,
+      modNames: modNames,
+      enable: false,
+      strategy: db.mod_strategy,
+      disabledFolder: db.disabled_folder || "_Disabled"
+    }).then(errors => {
+      if (errors.length > 0) {
+        alert("Some mods failed to disable:\n" + errors.join("\n"));
+      }
+      
+      persist({
+        ...db,
+        mods: db.mods.map(m =>
+          modsWithTag.find(mt => mt.id === m.id) ? { ...m, enabled: false } : m
+        )
+      });
+    }).catch(err => {
+      alert("Failed to disable mods: " + err);
+    });
+  }
+
+  function handleSearchInMods(tagName) {
+    setView("manager");
+    setSearchQuery(tagName);
+  }
+
   function changeModStrategy(strategy) {
     persist({
       ...db,
@@ -690,6 +770,22 @@ export default function App() {
             onUpdateName={updateName}
             onMoveModToCategory={moveModToCategory}
             onSearchChange={setSearchQuery}
+          />
+        )}
+
+        {view === "tags" && (
+          <TagsView
+            tags={db.tags || []}
+            tagMetadata={db.tag_metadata || []}
+            mods={db.mods}
+            selectedTag={selectedTag}
+            searchQuery={tagSearchQuery}
+            onSelectTag={setSelectedTag}
+            onUpdateTagMetadata={updateTagMetadata}
+            onEnableAllInTag={handleEnableAllInTag}
+            onDisableAllInTag={handleDisableAllInTag}
+            onSearchInMods={handleSearchInMods}
+            onSearchChange={setTagSearchQuery}
           />
         )}
 

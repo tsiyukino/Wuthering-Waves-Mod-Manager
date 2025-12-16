@@ -16,6 +16,14 @@ pub struct Category {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct TagMetadata {
+    pub name: String,
+    pub description: String,
+    pub preview: Option<String>,
+    pub mutually_exclusive: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Mod {
     pub id: i64,
     pub name: String,
@@ -34,6 +42,7 @@ pub struct Database {
     pub categories: Vec<Category>,
     pub mods: Vec<Mod>,
     pub tags: Vec<String>,
+    pub tag_metadata: Vec<TagMetadata>,
 }
 
 fn get_storage_location() -> String {
@@ -83,6 +92,7 @@ fn load_db() -> Result<Database, String> {
             }],
             mods: vec![],
             tags: vec![],
+            tag_metadata: vec![],
         };
         
         let json = serde_json::to_string_pretty(&default)
