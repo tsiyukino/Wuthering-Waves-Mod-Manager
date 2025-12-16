@@ -96,6 +96,27 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
       <div className="panel-header">Preview</div>
       
       <div className="preview-section">
+        <div className="mod-name-section">
+          {isEditingName ? (
+            <input
+              type="text"
+              className="mod-name-input"
+              value={editedName}
+              onChange={(e) => setEditedName(e.target.value)}
+              onKeyDown={handleNameKeyDown}
+              onBlur={saveEditName}
+              autoFocus
+            />
+          ) : (
+            <div className="mod-name-display">
+              <span className="mod-name-text">{mod.name}</span>
+              <button className="mod-name-edit" onClick={startEditName}>
+                ✏️
+              </button>
+            </div>
+          )}
+        </div>
+
         <div className="preview-image-container">
           {mod.preview ? (
             <img 
@@ -131,27 +152,6 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
         >
           <span>⬆️</span> Upload Image
         </button>
-
-        <div className="mod-name-section">
-          {isEditingName ? (
-            <input
-              type="text"
-              className="mod-name-input"
-              value={editedName}
-              onChange={(e) => setEditedName(e.target.value)}
-              onKeyDown={handleNameKeyDown}
-              onBlur={saveEditName}
-              autoFocus
-            />
-          ) : (
-            <div className="mod-name-display">
-              <span className="mod-name-text">{mod.name}</span>
-              <button className="mod-name-edit" onClick={startEditName}>
-                ✏️
-              </button>
-            </div>
-          )}
-        </div>
       </div>
 
       <div className="tags-section">

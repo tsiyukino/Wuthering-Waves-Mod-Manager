@@ -1,3 +1,5 @@
+import React from "react";
+
 export default function SettingsView({ 
   rootFolder, 
   modStrategy,
@@ -5,11 +7,24 @@ export default function SettingsView({
   dataLocation,
   appdataPath,
   localPath,
-  onChangeRoot, 
+  onChangeRoot,
+  onChangeRootWithMigration,
   onChangeStrategy,
   onChangeDisabledFolder,
   onChangeDataLocation 
 }) {
+  const [newRootFolder, setNewRootFolder] = React.useState(rootFolder);
+
+  function handleRootFolderChange(e) {
+    setNewRootFolder(e.target.value);
+  }
+
+  function handleRootFolderBlur() {
+    if (newRootFolder !== rootFolder) {
+      onChangeRootWithMigration(newRootFolder);
+    }
+  }
+
   return (
     <div className="settings-view">
       <h2>Settings</h2>
@@ -19,12 +34,13 @@ export default function SettingsView({
         <input
           type="text"
           className="text-input"
-          value={rootFolder}
-          onChange={e => onChangeRoot(e.target.value)}
+          value={newRootFolder}
+          onChange={handleRootFolderChange}
+          onBlur={handleRootFolderBlur}
           placeholder="C:\Games\Mods"
         />
         <div className="setting-hint">
-          The folder where all your mod files are stored.
+          The folder where all your mod files are stored. Changes will prompt to migrate mods.
         </div>
       </div>
 

@@ -30,6 +30,7 @@ export default function App() {
   
   // Dialog states
   const [categoryPrompt, setCategoryPrompt] = useState(false);
+  const [tagPrompt, setTagPrompt] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [migrationDialog, setMigrationDialog] = useState(null);
   const [restartDialog, setRestartDialog] = useState(false);
@@ -189,28 +190,29 @@ export default function App() {
     if (isProcessing) return;
     
     try {
-      // Open file/folder picker for both folders and archives
+      // Open file/folder picker for folders and archives
       const selected = await open({
         multiple: false,
-        title: "Select Mod Folder or ZIP Archive",
+        directory: true,
+        title: "Select Mod Folder or Archive",
         filters: [{
           name: 'Mod Files',
-          extensions: ['zip']
+          extensions: ['zip', '7z', 'rar']
         }]
       });
 
       if (!selected) return;
 
-      // Check if it's a ZIP file
-      const isZip = selected.toLowerCase().endsWith('.zip');
+      // Check if it's an archive file
+      const isArchive = selected.toLowerCase().match(/\.(zip|7z|rar)$/);
       
       // Extract folder name from path
       const pathParts = selected.split(/[\\/]/);
       let folderName = pathParts[pathParts.length - 1];
       
-      // Remove .zip extension if present
-      if (isZip) {
-        folderName = folderName.replace(/\.zip$/i, '');
+      // Remove archive extension if present
+      if (isArchive) {
+        folderName = folderName.replace(/\.(zip|7z|rar)$/i, '');
       }
 
       // Check if mod already exists
@@ -219,20 +221,50 @@ export default function App() {
         return;
       }
 
+      // If it's a folder, ask copy or move
+      let shouldMove = false;
+      if (!isArchive) {
+        const result = await new Promise((resolve) => {
+          setDeleteConfirm({
+            title: "Copy or Move?",
+            message: "Do you want to copy or move this folder?",
+            onConfirm: () => {
+              setDeleteConfirm(null);
+              resolve(true); // move
+            },
+            onCancel: () => {
+              setDeleteConfirm(null);
+              resolve(false); // copy
+            },
+            confirmText: "Move",
+            cancelText: "Copy"
+          });
+        });
+        shouldMove = result;
+      }
+
       // Show processing indicator
       setIsProcessing(true);
-      setProgressMessage(isZip ? "Extracting archive..." : "Copying folder...");
+      setProgressMessage(isArchive ? "Extracting archive..." : (shouldMove ? "Moving folder..." : "Copying folder..."));
       setProgressPercent(0);
 
-      // Handle ZIP extraction or folder copy
+      // Handle archive extraction or folder copy/move
       try {
-        if (isZip) {
+        if (isArchive) {
           await invoke("extract_archive", {
             archivePath: selected,
             destRoot: db.root_folder,
             destName: folderName
           });
+        } else if (shouldMove) {
+          // Move folder
+          const destPath = db.root_folder + "/" + folderName;
+          await invoke("bash_tool", {
+            command: `mv "${selected}" "${destPath}"`,
+            description: "Move mod folder"
+          });
         } else {
+          // Copy folder
           await invoke("copy_mod", {
             source: selected,
             destRoot: db.root_folder,
@@ -241,7 +273,7 @@ export default function App() {
         }
       } catch (copyErr) {
         setIsProcessing(false);
-        alert("Failed to " + (isZip ? "extract" : "copy") + " mod: " + copyErr);
+        alert("Failed to " + (isArchive ? "extract" : (shouldMove ? "move" : "copy")) + " mod: " + copyErr);
         return;
       }
 
@@ -627,6 +659,63 @@ export default function App() {
     setSelectedModId(null);
   }
 
+  function handleAddTag() {
+    setTagPrompt(true);
+  }
+
+  function handleTagConfirm(name) {
+    setTagPrompt(false);
+    if (db.tags.includes(name)) {
+      alert("Tag already exists!");
+      return;
+    }
+    
+    persist({
+      ...db,
+      tags: [...db.tags, name]
+    });
+  }
+
+  function handleRemoveTag() {
+    if (!selectedTag) return;
+    
+    const modsWithTag = db.mods.filter(m => m.tags && m.tags.includes(selectedTag));
+    
+    if (modsWithTag.length > 0) {
+      setDeleteConfirm({
+        title: "Remove Tag",
+        message: `Tag "${selectedTag}" is used by ${modsWithTag.length} mod(s). Remove it from all mods?`,
+        onConfirm: () => {
+          persist({
+            ...db,
+            tags: db.tags.filter(t => t !== selectedTag),
+            tag_metadata: db.tag_metadata?.filter(tm => tm.name !== selectedTag) || [],
+            mods: db.mods.map(m => ({
+              ...m,
+              tags: m.tags?.filter(t => t !== selectedTag) || []
+            }))
+          });
+          setSelectedTag(null);
+          setDeleteConfirm(null);
+        }
+      });
+    } else {
+      setDeleteConfirm({
+        title: "Remove Tag",
+        message: `Remove tag "${selectedTag}"?`,
+        onConfirm: () => {
+          persist({
+            ...db,
+            tags: db.tags.filter(t => t !== selectedTag),
+            tag_metadata: db.tag_metadata?.filter(tm => tm.name !== selectedTag) || []
+          });
+          setSelectedTag(null);
+          setDeleteConfirm(null);
+        }
+      });
+    }
+  }
+
   function handleClearSelections() {
     setSelectedModId(null);
     setSelectedTag(null);
@@ -638,6 +727,106 @@ export default function App() {
       ...db,
       mod_strategy: strategy
     });
+  }
+
+  async function handleChangeRootWithMigration(newRoot) {
+    const oldRoot = db.root_folder;
+    
+    if (oldRoot === newRoot) return;
+    
+    // Check if old root folder exists and has mods
+    try {
+      const oldFolderExists = await invoke("bash_tool", {
+        command: `test -d "${oldRoot}" && echo "exists" || echo "not_exists"`,
+        description: "Check if old root folder exists"
+      }).then(result => result.includes("exists"));
+      
+      if (oldFolderExists && db.mods.length > 0) {
+        // Ask user if they want to move mods
+        setDeleteConfirm({
+          title: "Migrate Mods?",
+          message: `The old root folder "${oldRoot}" contains ${db.mods.length} mod(s). Do you want to move them to the new location "${newRoot}"?`,
+          confirmText: "Move Mods",
+          cancelText: "Change Path Only",
+          onConfirm: async () => {
+            setDeleteConfirm(null);
+            setIsProcessing(true);
+            setProgressMessage("Moving mods to new location...");
+            
+            try {
+              // Create new root folder if it doesn't exist
+              await invoke("bash_tool", {
+                command: `mkdir -p "${newRoot}"`,
+                description: "Create new root folder"
+              });
+              
+              // Move all mod folders
+              for (const mod of db.mods) {
+                const oldPath = `${oldRoot}/${mod.name}`;
+                const newPath = `${newRoot}/${mod.name}`;
+                
+                try {
+                  await invoke("bash_tool", {
+                    command: `mv "${oldPath}" "${newPath}"`,
+                    description: `Move mod ${mod.name}`
+                  });
+                } catch (err) {
+                  console.error(`Failed to move ${mod.name}:`, err);
+                }
+              }
+              
+              // Also move disabled folder if using generic_rename strategy
+              if (db.mod_strategy === "generic_rename") {
+                const oldDisabled = `${oldRoot}/${db.disabled_folder || "_Disabled"}`;
+                const newDisabled = `${newRoot}/${db.disabled_folder || "_Disabled"}`;
+                
+                try {
+                  await invoke("bash_tool", {
+                    command: `test -d "${oldDisabled}" && mv "${oldDisabled}" "${newDisabled}" || true`,
+                    description: "Move disabled folder"
+                  });
+                } catch (err) {
+                  console.error("Failed to move disabled folder:", err);
+                }
+              }
+              
+              setIsProcessing(false);
+              setProgressMessage("");
+              
+              persist({
+                ...db,
+                root_folder: newRoot
+              });
+              
+              alert("Mods migrated successfully!");
+            } catch (err) {
+              setIsProcessing(false);
+              setProgressMessage("");
+              alert("Failed to migrate mods: " + err);
+            }
+          },
+          onCancel: () => {
+            setDeleteConfirm(null);
+            persist({
+              ...db,
+              root_folder: newRoot
+            });
+          }
+        });
+      } else {
+        // No mods or old folder doesn't exist, just change the path
+        persist({
+          ...db,
+          root_folder: newRoot
+        });
+      }
+    } catch (err) {
+      // If check fails, just change the path
+      persist({
+        ...db,
+        root_folder: newRoot
+      });
+    }
   }
 
   async function changeDataLocation(newLocation) {
@@ -799,6 +988,8 @@ export default function App() {
             onDisableAllInTag={handleDisableAllInTag}
             onSearchInMods={handleSearchInMods}
             onSearchChange={setTagSearchQuery}
+            onAddTag={handleAddTag}
+            onRemoveTag={handleRemoveTag}
           />
         )}
 
@@ -813,6 +1004,7 @@ export default function App() {
             onChangeRoot={(value) =>
               persist({ ...db, root_folder: value })
             }
+            onChangeRootWithMigration={handleChangeRootWithMigration}
             onChangeStrategy={changeModStrategy}
             onChangeDisabledFolder={(value) =>
               persist({ ...db, disabled_folder: value })
@@ -830,12 +1022,22 @@ export default function App() {
         onCancel={() => setCategoryPrompt(false)}
       />
 
+      <PromptDialog
+        isOpen={tagPrompt}
+        title="New Tag"
+        placeholder="Enter tag name"
+        onConfirm={handleTagConfirm}
+        onCancel={() => setTagPrompt(false)}
+      />
+
       <ConfirmDialog
         isOpen={!!deleteConfirm}
         title={deleteConfirm?.title}
         message={deleteConfirm?.message}
         onConfirm={deleteConfirm?.onConfirm}
         onCancel={() => setDeleteConfirm(null)}
+        confirmText={deleteConfirm?.confirmText}
+        cancelText={deleteConfirm?.cancelText}
       />
 
       <DataMigrationDialog

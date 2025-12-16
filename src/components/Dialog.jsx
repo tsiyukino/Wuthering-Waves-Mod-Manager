@@ -61,7 +61,7 @@ export function PromptDialog({ isOpen, title, placeholder, onConfirm, onCancel }
   );
 }
 
-export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
+export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel, confirmText, cancelText }) {
   if (!isOpen) return null;
 
   return (
@@ -78,10 +78,10 @@ export function ConfirmDialog({ isOpen, title, message, onConfirm, onCancel }) {
         
         <div className="modal-footer">
           <button className="modal-btn-cancel" onClick={onCancel}>
-            Cancel
+            {cancelText || "Cancel"}
           </button>
           <button className="modal-btn-confirm" onClick={onConfirm}>
-            OK
+            {confirmText || "OK"}
           </button>
         </div>
       </div>

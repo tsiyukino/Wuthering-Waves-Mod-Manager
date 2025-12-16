@@ -11,7 +11,9 @@ export default function TagsView({
   onEnableAllInTag,
   onDisableAllInTag,
   onSearchInMods,
-  onSearchChange
+  onSearchChange,
+  onAddTag,
+  onRemoveTag
 }) {
   const [filterConflict, setFilterConflict] = useState(false);
 
@@ -128,6 +130,19 @@ export default function TagsView({
             })
           )}
         </div>
+
+        <div className="tags-actions">
+          <button className="secondary-button" onClick={onAddTag}>
+            <span>➕</span> Add Tag
+          </button>
+          <button 
+            className="secondary-button" 
+            onClick={onRemoveTag}
+            disabled={!selectedTag}
+          >
+            <span>🗑️</span> Remove Tag
+          </button>
+        </div>
       </div>
 
       {selectedMeta && (
@@ -196,29 +211,6 @@ function TagDetail({
       <div className="tag-detail-header">Tag Details</div>
 
       <div className="tag-preview-section">
-        {metadata.preview ? (
-          <img src={metadata.preview} alt={tag} className="tag-preview-image" />
-        ) : (
-          <div className="tag-preview-placeholder">
-            <span style={{ fontSize: 64 }}>🏷️</span>
-          </div>
-        )}
-        
-        <input
-          type="file"
-          id="tag-image-upload"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={handleImageUpload}
-        />
-        
-        <button
-          className="upload-btn secondary-button"
-          onClick={() => document.getElementById('tag-image-upload').click()}
-        >
-          <span>⬆️</span> Upload Image
-        </button>
-
         <div className="tag-name-section">
           {isEditingName ? (
             <input
@@ -242,6 +234,29 @@ function TagDetail({
             </div>
           )}
         </div>
+
+        {metadata.preview ? (
+          <img src={metadata.preview} alt={tag} className="tag-preview-image" />
+        ) : (
+          <div className="tag-preview-placeholder">
+            <span style={{ fontSize: 64 }}>🏷️</span>
+          </div>
+        )}
+        
+        <input
+          type="file"
+          id="tag-image-upload"
+          accept="image/*"
+          style={{ display: 'none' }}
+          onChange={handleImageUpload}
+        />
+        
+        <button
+          className="upload-btn secondary-button"
+          onClick={() => document.getElementById('tag-image-upload').click()}
+        >
+          <span>⬆️</span> Upload Image
+        </button>
       </div>
 
       <div className="tag-info-section">
@@ -262,19 +277,19 @@ function TagDetail({
           className="secondary-button"
           onClick={() => onEnableAll(tag)}
         >
-          <span>✓</span> Enable All
+          <span>✓</span> Enable
         </button>
         <button 
           className="secondary-button"
           onClick={() => onDisableAll(tag)}
         >
-          <span>✗</span> Disable All
+          <span>✗</span> Disable
         </button>
         <button 
           className="secondary-button"
           onClick={() => onSearchInMods(tag)}
         >
-          <span>🔍</span> Find in Mods
+          <span>🔍</span> Find
         </button>
       </div>
 
