@@ -174,3 +174,17 @@
   height: 18px;
   cursor: pointer;
 }
+
+/* Disabled Settings Section */
+.settings-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  user-select: none;
+}
+
+.settings-disabled-hint {
+  font-size: 14px;
+  font-weight: 400;
+  color: #f39c12;
+  font-style: italic;
+}

@@ -8,6 +8,9 @@
 @import './components/layout.css';
 
 /* Feature components */
+@import './components/home.css';
+@import './components/games.css';
+@import './components/game-dialog.css';
 @import './components/categories.css';
 @import './components/mods.css';
 @import './components/mod-details.css';

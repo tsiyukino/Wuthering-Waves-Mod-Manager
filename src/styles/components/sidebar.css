@@ -84,3 +84,24 @@ nav {
   padding: 12px 8px;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
+
+/* Sidebar Divider */
+.sidebar-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  margin: 8px 16px;
+}
+
+.sidebar.collapsed .sidebar-divider {
+  margin: 8px;
+}
+
+/* Disabled Navigation Item */
+.nav-item.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.nav-item.disabled:hover {
+  background: transparent;
+}

@@ -45,6 +45,14 @@ pub struct Database {
     pub tag_metadata: Vec<TagMetadata>,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Game {
+    pub id: i64,
+    pub name: String,
+    pub description: String,
+    pub preview: Option<String>,
+}
+
 fn get_storage_location() -> String {
     let config_path = Path::new(".").join("storage-config.json");
     
@@ -61,18 +69,170 @@ fn get_storage_location() -> String {
     String::from("appdata")
 }
 
-fn get_db_path() -> PathBuf {
+fn get_data_dir() -> PathBuf {
     let location = get_storage_location();
     
     if location == "appdata" {
         if let Ok(appdata) = std::env::var("APPDATA").or_else(|_| std::env::var("HOME")) {
             let dir = Path::new(&appdata).join("ModManager");
             let _ = fs::create_dir_all(&dir);
-            return dir.join("mod-manager.json");
+            return dir;
         }
     }
     
-    PathBuf::from(".").join("mod-manager.json")
+    PathBuf::from(".")
+}
+
+fn get_games_path() -> PathBuf {
+    get_data_dir().join("games.json")
+}
+
+fn get_game_db_path(game_id: i64) -> PathBuf {
+    get_data_dir().join(format!("game-{}.json", game_id))
+}
+
+// ============ GAME MANAGEMENT ============
+
+#[tauri::command]
+fn load_games() -> Result<Vec<Game>, String> {
+    let path = get_games_path();
+    
+    if !path.exists() {
+        return Ok(vec![]);
+    }
+    
+    let content = fs::read_to_string(&path)
+        .map_err(|e| e.to_string())?;
+    
+    let games: Vec<Game> = serde_json::from_str(&content)
+        .map_err(|e| e.to_string())?;
+    
+    Ok(games)
+}
+
+#[tauri::command]
+fn add_game(name: String, description: String, preview: Option<String>) -> Result<Game, String> {
+    let mut games = load_games()?;
+    
+    let new_id = games.iter().map(|g| g.id).max().unwrap_or(0) + 1;
+    
+    let new_game = Game {
+        id: new_id,
+        name,
+        description,
+        preview,
+    };
+    
+    games.push(new_game.clone());
+    
+    let json = serde_json::to_string_pretty(&games)
+        .map_err(|e| e.to_string())?;
+    fs::write(&get_games_path(), json)
+        .map_err(|e| e.to_string())?;
+    
+    // Create default database for this game
+    let default_db = Database {
+        root_folder: String::from("C:\\Games\\Mods"),
+        disabled_folder: String::from("_Disabled"),
+        mod_strategy: String::from("wuthering_waves"),
+        categories: vec![Category {
+            id: 1,
+            name: String::from("Root"),
+            parent_id: None,
+            expanded: true,
+        }],
+        mods: vec![],
+        tags: vec![],
+        tag_metadata: vec![],
+    };
+    
+    let db_json = serde_json::to_string_pretty(&default_db)
+        .map_err(|e| e.to_string())?;
+    fs::write(&get_game_db_path(new_id), db_json)
+        .map_err(|e| e.to_string())?;
+    
+    Ok(new_game)
+}
+
+#[tauri::command]
+fn update_game(game_id: i64, name: String, description: String, preview: Option<String>) -> Result<(), String> {
+    let mut games = load_games()?;
+    
+    if let Some(game) = games.iter_mut().find(|g| g.id == game_id) {
+        game.name = name;
+        game.description = description;
+        game.preview = preview;
+    } else {
+        return Err(format!("Game with id {} not found", game_id));
+    }
+    
+    let json = serde_json::to_string_pretty(&games)
+        .map_err(|e| e.to_string())?;
+    fs::write(&get_games_path(), json)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn delete_game(game_id: i64) -> Result<(), String> {
+    let mut games = load_games()?;
+    games.retain(|g| g.id != game_id);
+    
+    let json = serde_json::to_string_pretty(&games)
+        .map_err(|e| e.to_string())?;
+    fs::write(&get_games_path(), json)
+        .map_err(|e| e.to_string())?;
+    
+    // Delete game database file
+    let db_path = get_game_db_path(game_id);
+    if db_path.exists() {
+        fs::remove_file(&db_path)
+            .map_err(|e| format!("Failed to delete game data: {}", e))?;
+    }
+    
+    Ok(())
+}
+
+// ============ GAME DATABASE MANAGEMENT ============
+
+#[tauri::command]
+fn load_game_db(game_id: i64) -> Result<Database, String> {
+    let path = get_game_db_path(game_id);
+    
+    if !path.exists() {
+        return Err(format!("Game database not found for game id {}", game_id));
+    }
+    
+    let content = fs::read_to_string(&path)
+        .map_err(|e| e.to_string())?;
+    
+    let mut db: Database = serde_json::from_str(&content)
+        .map_err(|e| e.to_string())?;
+    
+    // Add fields if they don't exist (for backward compatibility)
+    if db.mod_strategy.is_empty() {
+        db.mod_strategy = String::from("wuthering_waves");
+    }
+    if db.disabled_folder.is_empty() {
+        db.disabled_folder = String::from("_Disabled");
+    }
+    
+    Ok(db)
+}
+
+#[tauri::command]
+fn save_game_db(game_id: i64, db: Database) -> Result<(), String> {
+    let path = get_game_db_path(game_id);
+    let json = serde_json::to_string_pretty(&db)
+        .map_err(|e| e.to_string())?;
+    
+    fs::write(&path, json)
+        .map_err(|e| e.to_string())
+}
+
+// ============ LEGACY FUNCTIONS (for backward compatibility) ============
+
+fn get_db_path() -> PathBuf {
+    get_data_dir().join("mod-manager.json")
 }
 
 #[tauri::command]
@@ -108,7 +268,6 @@ fn load_db() -> Result<Database, String> {
     let mut db: Database = serde_json::from_str(&content)
         .map_err(|e| e.to_string())?;
     
-    // Add fields if they don't exist (for backward compatibility)
     if db.mod_strategy.is_empty() {
         db.mod_strategy = String::from("wuthering_waves");
     }
@@ -128,6 +287,8 @@ fn save_db(db: Database) -> Result<(), String> {
     fs::write(&path, json)
         .map_err(|e| e.to_string())
 }
+
+// ============ MOD OPERATIONS ============
 
 #[tauri::command]
 fn toggle_mod(root: String, name: String, enable: bool, strategy: String, disabled_folder: String) -> Result<(), String> {
@@ -152,7 +313,6 @@ fn toggle_generic_rename(mod_path: &Path, enable: bool, root: &str, disabled_fol
     let root_path = Path::new(root);
     let disabled_path = root_path.join(disabled_folder);
     
-    // Ensure disabled folder exists
     if !disabled_path.exists() {
         fs::create_dir_all(&disabled_path)
             .map_err(|e| format!("Failed to create disabled folder: {}", e))?;
@@ -162,14 +322,12 @@ fn toggle_generic_rename(mod_path: &Path, enable: bool, root: &str, disabled_fol
         .ok_or_else(|| "Cannot get folder name".to_string())?;
     
     if enable {
-        // Move from disabled folder back to root
         let source = disabled_path.join(folder_name);
         if source.exists() {
             fs::rename(&source, mod_path)
                 .map_err(|e| format!("Failed to enable mod: {}", e))?;
         }
     } else {
-        // Move to disabled folder
         let destination = disabled_path.join(folder_name);
         if mod_path.exists() {
             fs::rename(mod_path, &destination)
@@ -191,19 +349,16 @@ fn toggle_files_recursive(dir: &Path, enable: bool, extension: &str) -> Result<(
             let ext_str = ext.to_string_lossy();
             
             if enable {
-                // Check if file ends with .bak and original extension matches
                 if ext_str == "bak" {
                     if let Some(stem) = path.file_stem() {
                         let stem_str = stem.to_string_lossy();
                         if stem_str.ends_with(&format!(".{}", extension)) {
-                            // Remove .bak extension
                             let new_path = path.with_extension("");
                             fs::rename(&path, &new_path).map_err(|e| e.to_string())?;
                         }
                     }
                 }
             } else {
-                // Add .bak extension to matching files
                 if ext_str == extension {
                     let new_path = PathBuf::from(format!("{}.bak", path.display()));
                     fs::rename(&path, &new_path).map_err(|e| e.to_string())?;
@@ -257,11 +412,9 @@ async fn copy_mod(source: String, dest_root: String, dest_name: String, window: 
         return Err(format!("Destination already exists: {}", dest_path.display()));
     }
     
-    // Create destination directory
     fs::create_dir_all(&dest_path)
         .map_err(|e| format!("Failed to create destination: {}", e))?;
     
-    // Copy directory contents recursively with progress
     let _ = window.emit("copy-progress", "Copying files...");
     copy_dir_recursive(source_path, &dest_path)
         .map_err(|e| format!("Failed to copy mod: {}", e))?;
@@ -284,13 +437,11 @@ async fn move_mod(source: String, dest_root: String, dest_name: String) -> Resul
         return Err(format!("Destination already exists: {}", dest_path.display()));
     }
     
-    // Create destination parent directory if needed
     if let Some(parent) = dest_path.parent() {
         fs::create_dir_all(parent)
             .map_err(|e| format!("Failed to create destination directory: {}", e))?;
     }
     
-    // Move/rename the folder
     fs::rename(source_path, &dest_path)
         .map_err(|e| format!("Failed to move mod: {}", e))?;
     
@@ -317,6 +468,8 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     
     Ok(())
 }
+
+// ============ UTILITY FUNCTIONS ============
 
 #[tauri::command]
 fn get_appdata_path() -> Result<String, String> {
@@ -365,23 +518,19 @@ fn migrate_data(from: String, to: String, delete_old: bool, create_backup: bool)
         Path::new(".").join("mod-manager.json")
     };
     
-    // If destination exists and we're not deleting it, create backup first
     if to_path.exists() && !delete_old {
         let backup_path = to_path.with_extension("json.backup");
         fs::copy(&to_path, &backup_path)
             .map_err(|e| format!("Failed to create backup: {}", e))?;
     }
     
-    // Copy from source to destination
     if from_path.exists() {
-        // Read and write to avoid file locking issues
         let content = fs::read_to_string(&from_path)
             .map_err(|e| format!("Failed to read source data: {}", e))?;
         
         fs::write(&to_path, content)
             .map_err(|e| format!("Failed to write data: {}", e))?;
         
-        // Create backup of old location if requested
         if create_backup && !delete_old {
             let backup_path = from_path.with_extension("json.backup");
             let content = fs::read_to_string(&from_path)
@@ -390,7 +539,6 @@ fn migrate_data(from: String, to: String, delete_old: bool, create_backup: bool)
                 .map_err(|e| format!("Failed to create backup: {}", e))?;
         }
         
-        // Delete the source if requested
         if delete_old {
             fs::remove_file(&from_path)
                 .map_err(|e| format!("Failed to delete old data: {}", e))?;
@@ -516,7 +664,6 @@ async fn extract_archive(archive_path: String, dest_root: String, dest_name: Str
             None => continue,
         };
         
-        // Emit progress
         let progress = ((i + 1) as f32 / total_files as f32 * 100.0) as u32;
         let _ = window.emit("extract-progress", progress);
         
@@ -550,7 +697,6 @@ fn save_preview(root: String, name: String, data: String) -> Result<(), String> 
         fs::create_dir_all(&mod_path).map_err(|e| e.to_string())?;
     }
     
-    // Remove the data URL prefix
     let data = data.split(',').nth(1).unwrap_or(&data);
     
     let bytes = base64_decode(data)
@@ -616,7 +762,7 @@ fn import_config(path: String) -> Result<String, String> {
         .map_err(|e| format!("Failed to import configuration: {}", e))
 }
 
-// Simple base64 encoding/decoding
+// Base64 encoding/decoding
 fn base64_encode(data: &[u8]) -> String {
     use std::fmt::Write;
     const CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -690,8 +836,17 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
+            // Game management
+            load_games,
+            add_game,
+            update_game,
+            delete_game,
+            load_game_db,
+            save_game_db,
+            // Legacy database (for backward compatibility)
             load_db,
             save_db,
+            // Mod operations
             toggle_mod,
             delete_mod,
             rename_mod,
@@ -704,6 +859,7 @@ pub fn run() {
             load_notes,
             export_config,
             import_config,
+            // Utility
             get_appdata_path,
             get_local_path,
             check_db_exists,

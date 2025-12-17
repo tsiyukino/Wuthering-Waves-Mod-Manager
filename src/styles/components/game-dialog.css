@@ -1,0 +1,82 @@
+/* Game Dialog */
+.game-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.game-dialog-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.game-dialog-preview label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.game-dialog-preview-area {
+  position: relative;
+  width: 100%;
+  padding-top: 66.67%;
+  border: 2px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  overflow: hidden;
+}
+
+.game-dialog-preview-area:hover {
+  border-color: #667eea;
+  background: rgba(103, 126, 234, 0.05);
+}
+
+.game-dialog-preview-area img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-dialog-preview-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #999;
+  font-size: 14px;
+}
+
+.game-dialog-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.game-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-dialog-field label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.game-dialog-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}

@@ -5,6 +5,9 @@ import { listen } from '@tauri-apps/api/event';
 import { relaunch } from '@tauri-apps/plugin-process';
 
 import Sidebar from "./components/Sidebar";
+import HomePage from "./components/HomePage";
+import GamesView from "./components/GamesView";
+import GameDialog from "./components/GameDialog";
 import ManagerView from "./components/ManagerView";
 import SettingsView from "./components/SettingsView";
 import TagsView from "./components/TagsView";
@@ -14,8 +17,13 @@ import { PromptDialog, ConfirmDialog, DataMigrationDialog } from "./components/D
 import "./styles/app.css";
 
 export default function App() {
+  // Game management states
+  const [games, setGames] = useState([]);
+  const [currentGame, setCurrentGame] = useState(null);
+  const [gameDialog, setGameDialog] = useState({ isOpen: false, game: null });
+  
   const [db, setDb] = useState(null);
-  const [view, setView] = useState("manager");
+  const [view, setView] = useState("home");
   const [selectedCategory, setSelectedCategory] = useState(1);
   const [selectedModId, setSelectedModId] = useState(null);
   const [selectedModIds, setSelectedModIds] = useState([]); // Multi-select
@@ -42,6 +50,9 @@ export default function App() {
   const [progressPercent, setProgressPercent] = useState(0);
 
   useEffect(() => {
+    // Load games list on startup
+    loadGames();
+    
     // Load paths and data location
     Promise.all([
       invoke("get_appdata_path"),
@@ -51,24 +62,6 @@ export default function App() {
       setAppdataPath(appdata);
       setLocalPath(local);
       setDataLocation(location);
-    });
-
-    invoke("load_db").then(async (loadedDb) => {
-      // Load previews for all mods
-      const modsWithPreviews = await Promise.all(
-        loadedDb.mods.map(async (mod) => {
-          try {
-            const preview = await invoke("load_preview", {
-              root: loadedDb.root_folder,
-              name: mod.name
-            });
-            return { ...mod, preview };
-          } catch (e) {
-            return mod;
-          }
-        })
-      );
-      setDb({ ...loadedDb, mods: modsWithPreviews });
     });
 
     // Listen for progress events
@@ -99,7 +92,94 @@ export default function App() {
     };
   }, []);
 
-  if (!db) return null;
+  // Load game data when game is selected
+  useEffect(() => {
+    if (currentGame) {
+      loadGameData(currentGame.id);
+      document.title = `Mod Manager - ${currentGame.name}`;
+    } else {
+      document.title = "Mod Manager";
+      setDb(null);
+    }
+  }, [currentGame]);
+
+  async function loadGames() {
+    try {
+      const loadedGames = await invoke("load_games");
+      setGames(loadedGames);
+    } catch (err) {
+      console.error("Failed to load games:", err);
+      setGames([]);
+    }
+  }
+
+  async function loadGameData(gameId) {
+    try {
+      const loadedDb = await invoke("load_game_db", { gameId });
+      
+      // Load previews for all mods
+      const modsWithPreviews = await Promise.all(
+        loadedDb.mods.map(async (mod) => {
+          try {
+            const preview = await invoke("load_preview", {
+              root: loadedDb.root_folder,
+              name: mod.name
+            });
+            return { ...mod, preview };
+          } catch (e) {
+            return mod;
+          }
+        })
+      );
+      setDb({ ...loadedDb, mods: modsWithPreviews });
+    } catch (err) {
+      console.error("Failed to load game data:", err);
+      alert("Failed to load game data: " + err);
+    }
+  }
+
+  function handleSelectGame(game) {
+    setCurrentGame(game);
+    setView("manager");
+  }
+
+  function handleAddGame() {
+    setGameDialog({ isOpen: true, game: null });
+  }
+
+  function handleEditGame(game) {
+    setGameDialog({ isOpen: true, game });
+  }
+
+  async function handleGameDialogConfirm(gameData) {
+    try {
+      if (gameDialog.game) {
+        // Edit existing game
+        await invoke("update_game", {
+          gameId: gameDialog.game.id,
+          name: gameData.name,
+          description: gameData.description,
+          preview: gameData.preview
+        });
+      } else {
+        // Add new game
+        await invoke("add_game", {
+          name: gameData.name,
+          description: gameData.description,
+          preview: gameData.preview
+        });
+      }
+      
+      await loadGames();
+      setGameDialog({ isOpen: false, game: null });
+    } catch (err) {
+      alert("Failed to save game: " + err);
+    }
+  }
+
+  if (!db && view !== "home" && view !== "games" && view !== "settings") {
+    return <div>Loading...</div>;
+  }
 
   // Get the current mod object from the array
   const selectedMod = selectedModId 
@@ -108,7 +188,9 @@ export default function App() {
 
   function persist(updated) {
     setDb(updated);
-    invoke("save_db", { db: updated });
+    if (currentGame) {
+      invoke("save_game_db", { gameId: currentGame.id, db: updated });
+    }
   }
 
   function toggleCategory(id) {
@@ -922,10 +1004,22 @@ export default function App() {
         view={view} 
         onChangeView={setView}
         onClearSelections={handleClearSelections}
+        hasGameSelected={!!currentGame}
       />
 
       <main className="main">
-        {view === "manager" && (
+        {view === "home" && <HomePage />}
+
+        {view === "games" && (
+          <GamesView
+            games={games}
+            onSelectGame={handleSelectGame}
+            onAddGame={handleAddGame}
+            onEditGame={handleEditGame}
+          />
+        )}
+
+        {view === "manager" && db && (
           <ManagerView
             categories={db.categories}
             mods={db.mods}
@@ -957,7 +1051,7 @@ export default function App() {
           />
         )}
 
-        {view === "tags" && (
+        {view === "tags" && db && (
           <TagsView
             tags={db.tags || []}
             tagMetadata={db.tag_metadata || []}
@@ -977,19 +1071,20 @@ export default function App() {
 
         {view === "settings" && (
           <SettingsView
-            rootFolder={db.root_folder}
-            modStrategy={db.mod_strategy}
-            disabledFolder={db.disabled_folder || "_Disabled"}
+            rootFolder={db?.root_folder || ""}
+            modStrategy={db?.mod_strategy || "wuthering_waves"}
+            disabledFolder={db?.disabled_folder || "_Disabled"}
             dataLocation={dataLocation}
             appdataPath={appdataPath}
             localPath={localPath}
+            hasGameSelected={!!currentGame}
             onChangeRoot={(value) =>
-              persist({ ...db, root_folder: value })
+              db && persist({ ...db, root_folder: value })
             }
             onChangeRootWithMigration={handleChangeRootWithMigration}
             onChangeStrategy={changeModStrategy}
             onChangeDisabledFolder={(value) =>
-              persist({ ...db, disabled_folder: value })
+              db && persist({ ...db, disabled_folder: value })
             }
             onChangeDataLocation={changeDataLocation}
             onExportConfig={handleExportConfig}
@@ -997,6 +1092,13 @@ export default function App() {
           />
         )}
       </main>
+
+      <GameDialog
+        isOpen={gameDialog.isOpen}
+        game={gameDialog.game}
+        onConfirm={handleGameDialogConfirm}
+        onCancel={() => setGameDialog({ isOpen: false, game: null })}
+      />
 
       <PromptDialog
         isOpen={categoryPrompt}

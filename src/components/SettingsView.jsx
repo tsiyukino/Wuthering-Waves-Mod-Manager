@@ -7,6 +7,7 @@ export default function SettingsView({
   dataLocation,
   appdataPath,
   localPath,
+  hasGameSelected,
   onChangeRoot,
   onChangeRootWithMigration,
   onChangeStrategy,
@@ -57,8 +58,11 @@ export default function SettingsView({
         </div>
 
         {/* Game-Specific Settings Section */}
-        <div className="settings-category">
-          <h3 className="settings-category-title">Game-Specific Settings</h3>
+        <div className={`settings-category ${!hasGameSelected ? 'settings-disabled' : ''}`}>
+          <h3 className="settings-category-title">
+            Game-Specific Settings
+            {!hasGameSelected && <span className="settings-disabled-hint"> (Select a game first)</span>}
+          </h3>
           
           <div className="setting-group">
             <label>Mod Root Folder Path</label>
@@ -69,6 +73,7 @@ export default function SettingsView({
               onChange={handleRootFolderChange}
               onBlur={handleRootFolderBlur}
               placeholder="C:\Games\Mods"
+              disabled={!hasGameSelected}
             />
             <div className="setting-hint">
               The folder where all your mod files are stored. Changes will prompt to migrate mods.
@@ -81,6 +86,7 @@ export default function SettingsView({
               className="text-input"
               value={modStrategy}
               onChange={e => onChangeStrategy(e.target.value)}
+              disabled={!hasGameSelected}
             >
               <option value="wuthering_waves">Wuthering Waves (Rename .ini files)</option>
               <option value="generic_rename">Generic (Move to disabled folder)</option>
@@ -101,6 +107,7 @@ export default function SettingsView({
                 value={disabledFolder}
                 onChange={e => onChangeDisabledFolder(e.target.value)}
                 placeholder="_Disabled"
+                disabled={!hasGameSelected}
               />
               <div className="setting-hint">
                 Folder name (inside root folder) where disabled mods are moved to.
@@ -111,10 +118,18 @@ export default function SettingsView({
           <div className="setting-group">
             <label>Configuration Import/Export</label>
             <div className="setting-buttons">
-              <button className="secondary-button" onClick={onExportConfig}>
+              <button 
+                className="secondary-button" 
+                onClick={onExportConfig}
+                disabled={!hasGameSelected}
+              >
                 <span>💾</span> Export Configuration
               </button>
-              <button className="secondary-button" onClick={onImportConfig}>
+              <button 
+                className="secondary-button" 
+                onClick={onImportConfig}
+                disabled={!hasGameSelected}
+              >
                 <span>📥</span> Import Configuration
               </button>
             </div>
