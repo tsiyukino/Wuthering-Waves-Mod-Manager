@@ -15,6 +15,7 @@ export default function ModList({
   onDeselectAll,
   onSearchChange
 }) {
+  // Get all subcategory IDs recursively
   function getAllSubcategoryIds(categoryId) {
     const ids = [categoryId];
     const children = categories.filter(c => c.parent_id === categoryId);
@@ -29,6 +30,7 @@ export default function ModList({
   const categoryIds = getAllSubcategoryIds(selectedCategory);
   let visible = mods.filter(m => categoryIds.includes(m.category_id));
   
+  // Apply search filter
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
     visible = visible.filter(m => 
@@ -37,6 +39,7 @@ export default function ModList({
     );
   }
 
+  // Group mods by category for display
   function getDirectChildren(parentId) {
     return categories.filter(c => c.parent_id === parentId);
   }
@@ -56,7 +59,7 @@ export default function ModList({
       <div key={category.id} className="category-group" style={{ marginLeft: depth * 20 }}>
         {depth > 0 && (
           <div className="category-group-header">
-            📁 {category.name}
+            <Icon name="folder" size={16} /> {category.name}
           </div>
         )}
         
@@ -82,7 +85,6 @@ export default function ModList({
   return (
     <>
       <div className="search-bar">
-        <Icon name="search" size={20} style={{ marginRight: 8 }} />
         <input
           type="text"
           className="search-input"

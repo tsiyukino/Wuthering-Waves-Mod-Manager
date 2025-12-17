@@ -54,17 +54,19 @@
 .panel-header {
   padding: 16px 20px;
   font-weight: 600;
+  font-size: 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.6);
+  color: var(--text-primary);
 }
 
 .file-count {
   font-size: 12px;
   font-weight: 400;
-  color: #888;
+  color: var(--text-secondary);
 }
 
 /* Panel Actions */

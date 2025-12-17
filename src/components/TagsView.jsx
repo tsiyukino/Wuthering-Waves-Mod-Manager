@@ -18,6 +18,7 @@ export default function TagsView({
 }) {
   const [filterConflict, setFilterConflict] = useState(false);
 
+  // Calculate tag status
   function getTagStatus(tagName) {
     const modsWithTag = mods.filter(m => m.tags && m.tags.includes(tagName));
     if (modsWithTag.length === 0) return { status: 'empty', color: '#999' };
@@ -28,6 +29,7 @@ export default function TagsView({
     const metadata = tagMetadata.find(tm => tm.name === tagName);
     const isMutuallyExclusive = metadata?.mutually_exclusive || false;
     
+    // Check for conflict (mutually exclusive with multiple enabled)
     if (isMutuallyExclusive && enabledCount > 1) {
       return { status: 'conflict', color: '#e74c3c', text: 'Conflict' };
     }
@@ -41,6 +43,7 @@ export default function TagsView({
     }
   }
 
+  // Get tag metadata or create default
   function getTagMetadata(tagName) {
     return tagMetadata.find(tm => tm.name === tagName) || {
       name: tagName,
@@ -50,6 +53,7 @@ export default function TagsView({
     };
   }
 
+  // Filter tags
   let displayTags = tags;
   
   if (searchQuery) {
@@ -74,16 +78,13 @@ export default function TagsView({
     <div className="tags-view">
       <div className="tags-main">
         <div className="tags-header">
-          <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
-            <Icon name="search" size={20} style={{ marginRight: 8 }} />
-            <input
-              type="text"
-              className="search-input"
-              placeholder="Search tags..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </div>
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search tags..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
           <button 
             className={`filter-conflict-btn ${filterConflict ? 'active' : ''}`}
             onClick={() => setFilterConflict(!filterConflict)}
@@ -206,6 +207,22 @@ function TagDetail({
     reader.readAsDataURL(file);
   }
 
+  function handleDrop(e) {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        onUpdate(tag, { ...metadata, preview: e.target.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+  }
+
   return (
     <div className="tag-detail-panel">
       <div className="tag-detail-header">Tag Details</div>
@@ -229,19 +246,27 @@ function TagDetail({
             <div className="tag-name-display">
               <span className="tag-name-text">{tag}</span>
               <button className="tag-name-edit" onClick={() => { setEditedName(tag); setIsEditingName(true); }}>
-                ✏️
+                <Icon name="edit" size={18} />
               </button>
             </div>
           )}
         </div>
 
-        {metadata.preview ? (
-          <img src={metadata.preview} alt={tag} className="tag-preview-image" />
-        ) : (
-          <div className="tag-preview-placeholder">
-            <span style={{ fontSize: 64 }}>🏷️</span>
-          </div>
-        )}
+        <div 
+          className="tag-preview-area"
+          onClick={() => document.getElementById('tag-image-upload').click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
+          {metadata.preview ? (
+            <img src={metadata.preview} alt={tag} className="tag-preview-image" />
+          ) : (
+            <div className="tag-preview-placeholder">
+              <Icon name="tags" size={64} />
+              <span style={{ fontSize: 14, marginTop: 12 }}>Click or drag image here</span>
+            </div>
+          )}
+        </div>
         
         <input
           type="file"
@@ -250,13 +275,6 @@ function TagDetail({
           style={{ display: 'none' }}
           onChange={handleImageUpload}
         />
-        
-        <button
-          className="upload-btn secondary-button"
-          onClick={() => document.getElementById('tag-image-upload').click()}
-        >
-          <Icon name="upload" size={18} /> Upload Image
-        </button>
       </div>
 
       <div className="tag-info-section">
@@ -294,7 +312,7 @@ function TagDetail({
       </div>
 
       <div className="tag-description-section">
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>Description</div>
+        <div>Description</div>
         <textarea
           className="tag-description-textarea"
           value={description}

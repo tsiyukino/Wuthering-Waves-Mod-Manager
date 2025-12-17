@@ -1,3 +1,5 @@
+import Icon from "./IconSimple";
+
 function CategoryNode({
   category,
   categories,
@@ -45,7 +47,9 @@ function CategoryNode({
             {category.expanded ? "▼ " : "▶ "}
           </span>
         )}
-        <span className="folder-icon">📁 </span>
+        <span className="folder-icon">
+          <Icon name="folder" size={16} />
+        </span>
         {category.name}
       </div>
 

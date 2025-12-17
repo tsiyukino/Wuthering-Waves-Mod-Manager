@@ -201,6 +201,39 @@
   font-style: italic;
 }
 
+/* Theme Selector */
+.theme-selector {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.theme-select {
+  flex: 1;
+}
+
+.theme-btn {
+  padding: 12px 16px;
+  min-width: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make theme button icons blue */
+.theme-btn .icon,
+.theme-btn img.icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 0.7;
+}
+
+.theme-btn:hover:not(:disabled) .icon,
+.theme-btn:hover:not(:disabled) img.icon {
+  opacity: 1;
+}
+
 /* Strategy Selector */
 .strategy-selector {
   display: flex;

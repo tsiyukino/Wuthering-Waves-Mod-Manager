@@ -8,23 +8,24 @@
 .category {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
   margin-bottom: 2px;
   user-select: none;
+  color: var(--text-secondary);
 }
 
 .category:hover {
   background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
 }
 
 .category.selected {
   background: rgba(103, 126, 234, 0.15);
   color: #667eea;
-  font-weight: 500;
 }
 
 .category-children {
@@ -34,10 +35,30 @@
 .expand-icon {
   width: 16px;
   display: inline-block;
+  color: var(--text-secondary);
 }
 
 .folder-icon {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.folder-icon .icon,
+.folder-icon img.icon {
+  filter: brightness(0) saturate(100%) invert(60%);
+  opacity: 0.7;
+}
+
+.category:hover .folder-icon .icon,
+.category:hover .folder-icon img.icon {
+  opacity: 1;
+}
+
+.category.selected .folder-icon .icon,
+.category.selected .folder-icon img.icon {
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 1;
 }
 
 .category-group {
@@ -57,6 +78,11 @@
   gap: 6px;
 }
 
+.category-group-header .icon,
+.category-group-header img.icon {
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+}
+
 .category-list {
   max-height: 400px;
   overflow-y: auto;
@@ -68,6 +94,7 @@
   transition: all 0.2s;
   border-radius: 6px;
   margin-bottom: 4px;
+  color: var(--text-primary);
 }
 
 .category-option:hover {

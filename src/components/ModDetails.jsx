@@ -112,29 +112,28 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
             <div className="mod-name-display">
               <span className="mod-name-text">{mod.name}</span>
               <button className="mod-name-edit" onClick={startEditName}>
-                ✏️
+                <Icon name="edit" size={18} />
               </button>
             </div>
           )}
         </div>
 
-        <div className="preview-image-container">
+        <div 
+          className="preview-image-container"
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+        >
           {mod.preview ? (
             <img 
               src={mod.preview} 
               alt="Preview" 
               className="preview-image"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
             />
           ) : (
-            <div 
-              className="preview-placeholder"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-            >
-              <Icon name="upload" size={48} />
-              <span>Drag image here or click Upload</span>
+            <div className="preview-placeholder">
+              <Icon name="image_upload" size={64} />
+              <span>Drag image here or click to upload</span>
             </div>
           )}
         </div>
@@ -146,17 +145,10 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
           style={{ display: "none" }}
           onChange={handleImageUpload}
         />
-        
-        <button
-          className="upload-btn secondary-button"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Icon name="upload" size={18} /> Upload Image
-        </button>
       </div>
 
       <div className="tags-section">
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>Tags</div>
+        <div>Tags</div>
         
         <div className="tag-input-container-inline">
           <input
@@ -208,7 +200,7 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
       </div>
 
       <div className="notes-section">
-        <div style={{ fontWeight: 600, marginBottom: 8 }}>Notes</div>
+        <div>Notes</div>
         <textarea
           className="notes-textarea"
           value={mod.notes}

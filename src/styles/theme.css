@@ -5,7 +5,7 @@
   --accent-primary: #667eea;
   --accent-secondary: #764ba2;
   
-  /* Base colors */
+  /* Base colors - can be changed for dark mode */
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
@@ -14,6 +14,167 @@
   --text-tertiary: #999999;
   --border-color: rgba(0, 0, 0, 0.1);
   --shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode specific adjustments */
+body.dark-mode {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+}
+
+body.dark-mode .main {
+  background: rgba(26, 26, 26, 0.9);
+}
+
+body.dark-mode .sidebar {
+  background: rgba(26, 26, 26, 0.95);
+  border-right-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .panel-header,
+body.dark-mode .panel-actions,
+body.dark-mode .tags-header,
+body.dark-mode .tags-actions,
+body.dark-mode .sidebar-header,
+body.dark-mode .sidebar-footer,
+body.dark-mode .search-bar {
+  background: rgba(45, 45, 45, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .left-panel,
+body.dark-mode .right-panel,
+body.dark-mode .tags-detail {
+  background: rgba(26, 26, 26, 0.5);
+}
+
+body.dark-mode .middle-panel {
+  background: rgba(26, 26, 26, 0.3);
+}
+
+body.dark-mode .resize-handle {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .resize-handle:hover {
+  background: rgba(103, 126, 234, 0.5);
+}
+
+body.dark-mode .file-item,
+body.dark-mode .category,
+body.dark-mode .game-card,
+body.dark-mode .tag-card,
+body.dark-mode .feature-card,
+body.dark-mode .setting-group,
+body.dark-mode .settings-category,
+body.dark-mode .modal-dialog {
+  background: rgba(45, 45, 45, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .text-input,
+body.dark-mode .modal-input,
+body.dark-mode .search-input,
+body.dark-mode select.text-input,
+body.dark-mode .notes-textarea,
+body.dark-mode .tag-description-textarea,
+body.dark-mode .tag-input-inline {
+  background: rgba(45, 45, 45, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+/* Fix search icon for dark mode */
+body.dark-mode .search-input {
+  background: rgba(45, 45, 45, 0.8) url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="0 -960 960 960" width="20px" fill="%23667eea"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>') no-repeat 8px center;
+  background-size: 20px 20px;
+}
+
+body.dark-mode .secondary-button {
+  background: rgba(45, 45, 45, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+body.dark-mode .secondary-button:hover:not(:disabled) {
+  background: rgba(60, 60, 60, 0.9);
+}
+
+body.dark-mode .filter-conflict-btn {
+  background: rgba(45, 45, 45, 0.8);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text-primary);
+}
+
+body.dark-mode .filter-conflict-btn:hover {
+  background: rgba(60, 60, 60, 0.9);
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+body.dark-mode .filter-conflict-btn.active {
+  background: #e74c3c;
+  color: white;
+  border-color: #e74c3c;
+}
+
+body.dark-mode .modal-overlay {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+body.dark-mode .modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .modal-btn-cancel {
+  background: rgba(45, 45, 45, 0.8);
+  color: var(--text-primary);
+}
+
+body.dark-mode .tag-suggestions,
+body.dark-mode .tag-suggestions-inline {
+  background: rgba(45, 45, 45, 0.95);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+body.dark-mode .selected-tags,
+body.dark-mode .tag-chips-container {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode .games-header {
+  background: linear-gradient(to bottom,
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(26, 26, 26, 0.9) 50%,
+    rgba(26, 26, 26, 0) 100%
+  );
+}
+
+body.dark-mode .file-name,
+body.dark-mode .tag-card-name,
+body.dark-mode .tag-name-text,
+body.dark-mode .tag-detail-header,
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3,
+body.dark-mode .category,
+body.dark-mode .feature-card h3,
+body.dark-mode .setting-group label {
+  color: var(--text-primary);
+}
+
+body.dark-mode .file-path,
+body.dark-mode .tag-info-label,
+body.dark-mode .setting-hint,
+body.dark-mode .setting-description {
+  color: var(--text-secondary);
+}
+
+body.dark-mode .empty-message,
+body.dark-mode .empty-panel,
+body.dark-mode .empty-tags-hint {
+  color: var(--text-secondary);
 }
 
 /* Apply theme colors throughout the app */

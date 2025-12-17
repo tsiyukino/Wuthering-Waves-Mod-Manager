@@ -18,6 +18,8 @@ import enableIcon from '../assets/icons/enable.svg';
 import disableIcon from '../assets/icons/disable.svg';
 import moveIcon from '../assets/icons/move.svg';
 import findIcon from '../assets/icons/find.svg';
+import editIcon from '../assets/icons/edit.svg';
+import imageUploadIcon from '../assets/icons/image_upload.svg';
 
 const iconMap = {
   home: homeIcon,
@@ -37,6 +39,8 @@ const iconMap = {
   disable: disableIcon,
   move: moveIcon,
   find: findIcon,
+  edit: editIcon,
+  image_upload: imageUploadIcon,
 };
 
 export default function Icon({ name, size = 20, className = "" }) {

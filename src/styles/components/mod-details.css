@@ -12,6 +12,13 @@
   overflow: hidden;
   margin-bottom: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preview-image-container:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
 .preview-image {
@@ -35,10 +42,21 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: #999;
+  color: var(--text-secondary);
   gap: 12px;
   background: rgba(0, 0, 0, 0.02);
   transition: all 0.2s;
+}
+
+body.dark-mode .preview-placeholder {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.preview-placeholder .icon,
+.preview-placeholder img.icon {
+  filter: brightness(0) saturate(100%) invert(60%);
+  opacity: 0.7;
 }
 
 .preview-placeholder:hover {
@@ -66,7 +84,7 @@
 .mod-name-text {
   font-weight: 700;
   font-size: 18px;
-  color: #333;
+  color: var(--text-primary);
   flex: 1;
   word-break: break-word;
 }
@@ -74,16 +92,31 @@
 .mod-name-edit {
   background: none;
   border: none;
-  font-size: 16px;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 4px;
   transition: background 0.2s;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .mod-name-edit:hover {
   background: rgba(103, 126, 234, 0.1);
+}
+
+.mod-name-edit .icon,
+.mod-name-edit img.icon {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 0.7;
+}
+
+.mod-name-edit:hover .icon,
+.mod-name-edit:hover img.icon {
+  opacity: 1;
 }
 
 .mod-name-input {
@@ -94,7 +127,8 @@
   font-size: 18px;
   font-weight: 700;
   font-family: inherit;
-  background: white;
+  background: var(--bg-primary);
+  color: var(--text-primary);
 }
 
 .mod-name-input:focus {
@@ -111,6 +145,12 @@
   min-height: 150px;
 }
 
+.notes-section > div:first-child {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+}
+
 .notes-textarea {
   flex: 1;
   padding: 12px;
@@ -119,20 +159,26 @@
   font-family: 'Segoe UI', system-ui, sans-serif;
   font-size: 14px;
   resize: none;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-primary);
   transition: all 0.2s;
+  color: var(--text-primary);
 }
 
 .notes-textarea:focus {
   outline: none;
   border-color: #667eea;
-  background: white;
   box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
 }
 
 .tags-section {
   padding: 20px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tags-section > div:first-child {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
 }
 
 .tag-input-container-inline {
@@ -147,15 +193,19 @@
   border-radius: 6px;
   font-size: 13px;
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--bg-primary);
   transition: all 0.2s;
+  color: var(--text-primary);
 }
 
 .tag-input-inline:focus {
   outline: none;
   border-color: #667eea;
-  background: white;
   box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
+}
+
+.tag-input-inline::placeholder {
+  color: var(--text-secondary);
 }
 
 .tag-suggestions-inline {
@@ -163,7 +213,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--bg-primary);
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 6px;
   max-height: 150px;
@@ -171,6 +221,17 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 100;
   margin-top: 4px;
+}
+
+.tag-suggestion {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.2s;
+  color: var(--text-primary);
+}
+
+.tag-suggestion:hover {
+  background: rgba(103, 126, 234, 0.1);
 }
 
 .tag-chips-container {
@@ -181,6 +242,6 @@
 }
 
 .empty-tags-hint {
-  color: #999;
+  color: var(--text-secondary);
   font-size: 13px;
 }

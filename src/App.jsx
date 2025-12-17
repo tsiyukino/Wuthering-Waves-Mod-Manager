@@ -16,7 +16,62 @@ import { PromptDialog, ConfirmDialog, DataMigrationDialog } from "./components/D
 
 import "./styles/app.css";
 
+const THEME_PRESETS = [
+  { 
+    id: 'default', 
+    name: 'Default', 
+    primary: '#667eea', 
+    secondary: '#764ba2',
+    bg: '#ffffff',
+    bgSecondary: '#f8f9fa',
+    text: '#333333',
+    textSecondary: '#666666',
+    isDark: false
+  },
+  { 
+    id: 'dark', 
+    name: 'Dark Mode', 
+    primary: '#667eea', 
+    secondary: '#764ba2',
+    bg: '#1a1a1a',
+    bgSecondary: '#2d2d2d',
+    text: '#ffffff',
+    textSecondary: '#b0b0b0',
+    isDark: true
+  }
+];
+
+function applyTheme(theme) {
+  document.documentElement.style.setProperty('--accent-primary', theme.primary);
+  document.documentElement.style.setProperty('--accent-secondary', theme.secondary);
+  document.documentElement.style.setProperty('--bg-primary', theme.bg);
+  document.documentElement.style.setProperty('--bg-secondary', theme.bgSecondary);
+  document.documentElement.style.setProperty('--text-primary', theme.text);
+  document.documentElement.style.setProperty('--text-secondary', theme.textSecondary);
+  
+  if (theme.isDark) {
+    document.body.classList.add('dark-mode');
+  } else {
+    document.body.classList.remove('dark-mode');
+  }
+}
+
 export default function App() {
+  // Apply theme before anything else renders
+  const [themeInitialized, setThemeInitialized] = useState(false);
+
+  useEffect(() => {
+    // Load and apply theme immediately
+    const savedThemeId = localStorage.getItem('theme-preset') || 'default';
+    const savedCustomThemes = localStorage.getItem('custom-themes');
+    const customThemes = savedCustomThemes ? JSON.parse(savedCustomThemes) : [];
+    const allThemes = [...THEME_PRESETS, ...customThemes];
+    const theme = allThemes.find(t => t.id === savedThemeId) || THEME_PRESETS[0];
+    
+    applyTheme(theme);
+    setThemeInitialized(true);
+  }, []);
+
   // Game management states
   const [games, setGames] = useState([]);
   const [currentGame, setCurrentGame] = useState(null);
@@ -210,6 +265,11 @@ export default function App() {
     } catch (err) {
       alert("Failed to delete game: " + err);
     }
+  }
+
+  // Don't render until theme is initialized
+  if (!themeInitialized) {
+    return null;
   }
 
   if (!db && view !== "home" && view !== "games" && view !== "settings") {

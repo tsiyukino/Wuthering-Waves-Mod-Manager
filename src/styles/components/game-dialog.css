@@ -13,7 +13,7 @@
 
 .game-dialog-preview label {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   font-size: 14px;
 }
 
@@ -26,6 +26,12 @@
   cursor: pointer;
   transition: all 0.2s;
   overflow: hidden;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.dark-mode .game-dialog-preview-area {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .game-dialog-preview-area:hover {
@@ -53,8 +59,14 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: #999;
+  color: var(--text-secondary);
   font-size: 14px;
+}
+
+.game-dialog-preview-placeholder .icon,
+.game-dialog-preview-placeholder img.icon {
+  filter: brightness(0) saturate(100%) invert(60%);
+  opacity: 0.7;
 }
 
 .game-dialog-fields {
@@ -71,7 +83,7 @@
 
 .game-dialog-field label {
   font-weight: 600;
-  color: #333;
+  color: var(--text-primary);
   font-size: 14px;
 }
 

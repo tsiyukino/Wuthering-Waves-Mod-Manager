@@ -1,13 +1,30 @@
 import React from "react";
 import Icon from "./IconSimple";
+import { open } from '@tauri-apps/plugin-dialog';
 
 const THEME_PRESETS = [
-  { id: 'default', name: 'Default', primary: '#667eea', secondary: '#764ba2' },
-  { id: 'ocean', name: 'Ocean Blue', primary: '#2E86DE', secondary: '#54A0FF' },
-  { id: 'forest', name: 'Forest Green', primary: '#26A65B', secondary: '#2ECC71' },
-  { id: 'sunset', name: 'Sunset Orange', primary: '#EE5A6F', secondary: '#F39C12' },
-  { id: 'purple', name: 'Royal Purple', primary: '#9B59B6', secondary: '#8E44AD' },
-  { id: 'crimson', name: 'Crimson Red', primary: '#E74C3C', secondary: '#C0392B' },
+  { 
+    id: 'default', 
+    name: 'Default', 
+    primary: '#667eea', 
+    secondary: '#764ba2',
+    bg: '#ffffff',
+    bgSecondary: '#f8f9fa',
+    text: '#333333',
+    textSecondary: '#666666',
+    isDark: false
+  },
+  { 
+    id: 'dark', 
+    name: 'Dark Mode', 
+    primary: '#667eea', 
+    secondary: '#764ba2',
+    bg: '#1a1a1a',
+    bgSecondary: '#2d2d2d',
+    text: '#ffffff',
+    textSecondary: '#b0b0b0',
+    isDark: true
+  }
 ];
 
 export default function SettingsView({ 
@@ -30,6 +47,10 @@ export default function SettingsView({
   const [selectedTheme, setSelectedTheme] = React.useState(() => {
     return localStorage.getItem('theme-preset') || 'default';
   });
+  const [customThemes, setCustomThemes] = React.useState(() => {
+    const saved = localStorage.getItem('custom-themes');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   function handleRootFolderChange(e) {
     setNewRootFolder(e.target.value);
@@ -41,26 +62,139 @@ export default function SettingsView({
     }
   }
 
+  function applyTheme(theme) {
+    document.documentElement.style.setProperty('--accent-primary', theme.primary);
+    document.documentElement.style.setProperty('--accent-secondary', theme.secondary);
+    document.documentElement.style.setProperty('--bg-primary', theme.bg);
+    document.documentElement.style.setProperty('--bg-secondary', theme.bgSecondary);
+    document.documentElement.style.setProperty('--text-primary', theme.text);
+    document.documentElement.style.setProperty('--text-secondary', theme.textSecondary);
+    
+    // Set dark mode class on body for additional styling
+    if (theme.isDark) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+  }
+
   function handleThemeChange(e) {
     const themeId = e.target.value;
     setSelectedTheme(themeId);
     localStorage.setItem('theme-preset', themeId);
     
-    const theme = THEME_PRESETS.find(t => t.id === themeId);
+    // Find theme in both preset and custom themes
+    const allThemes = [...THEME_PRESETS, ...customThemes];
+    const theme = allThemes.find(t => t.id === themeId);
     if (theme) {
-      document.documentElement.style.setProperty('--accent-primary', theme.primary);
-      document.documentElement.style.setProperty('--accent-secondary', theme.secondary);
+      applyTheme(theme);
+    }
+  }
+
+  async function handleImportTheme() {
+    try {
+      const selected = await open({
+        multiple: false,
+        directory: false,
+        title: "Import Theme",
+        filters: [{
+          name: 'JSON Files',
+          extensions: ['json']
+        }]
+      });
+
+      if (!selected) return;
+
+      const content = await fetch(`file://${selected}`).then(r => r.text());
+      const imported = JSON.parse(content);
+
+      // Validate theme structure
+      if (!imported.id || !imported.name || !imported.primary || !imported.secondary) {
+        alert("Invalid theme file! Required fields: id, name, primary, secondary, bg, bgSecondary, text, textSecondary, isDark");
+        return;
+      }
+
+      // Add default values if not present
+      const newTheme = {
+        id: imported.id,
+        name: imported.name,
+        primary: imported.primary,
+        secondary: imported.secondary,
+        bg: imported.bg || '#ffffff',
+        bgSecondary: imported.bgSecondary || '#f8f9fa',
+        text: imported.text || '#333333',
+        textSecondary: imported.textSecondary || '#666666',
+        isDark: imported.isDark || false
+      };
+
+      // Check if theme with same ID already exists
+      const existingIndex = customThemes.findIndex(t => t.id === newTheme.id);
+      let updatedThemes;
+      
+      if (existingIndex >= 0) {
+        // Update existing theme
+        updatedThemes = [...customThemes];
+        updatedThemes[existingIndex] = newTheme;
+      } else {
+        // Add new theme
+        updatedThemes = [...customThemes, newTheme];
+      }
+
+      setCustomThemes(updatedThemes);
+      localStorage.setItem('custom-themes', JSON.stringify(updatedThemes));
+
+      // Apply the imported theme
+      setSelectedTheme(newTheme.id);
+      localStorage.setItem('theme-preset', newTheme.id);
+      applyTheme(newTheme);
+
+      alert(`Theme "${newTheme.name}" imported successfully!`);
+    } catch (err) {
+      alert("Failed to import theme: " + err);
+    }
+  }
+
+  async function handleExportTheme() {
+    const allThemes = [...THEME_PRESETS, ...customThemes];
+    const theme = allThemes.find(t => t.id === selectedTheme);
+    
+    if (!theme) {
+      alert("No theme selected!");
+      return;
+    }
+
+    try {
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      const filePath = await save({
+        defaultPath: `${theme.name.replace(/\s+/g, '-').toLowerCase()}-theme.json`,
+        filters: [{
+          name: 'JSON Files',
+          extensions: ['json']
+        }]
+      });
+
+      if (!filePath) return;
+
+      const themeData = JSON.stringify(theme, null, 2);
+      await fetch(`file://${filePath}`, {
+        method: 'PUT',
+        body: themeData
+      });
+
+      alert("Theme exported successfully!");
+    } catch (err) {
+      alert("Failed to export theme: " + err);
     }
   }
 
   // Apply theme on mount
   React.useEffect(() => {
-    const theme = THEME_PRESETS.find(t => t.id === selectedTheme);
+    const allThemes = [...THEME_PRESETS, ...customThemes];
+    const theme = allThemes.find(t => t.id === selectedTheme);
     if (theme) {
-      document.documentElement.style.setProperty('--accent-primary', theme.primary);
-      document.documentElement.style.setProperty('--accent-secondary', theme.secondary);
+      applyTheme(theme);
     }
-  }, [selectedTheme]);
+  }, [selectedTheme, customThemes]);
 
   return (
     <div className="settings-view">
@@ -73,17 +207,42 @@ export default function SettingsView({
           
           <div className="setting-group">
             <label>Theme Preset</label>
-            <select
-              className="text-input"
-              value={selectedTheme}
-              onChange={handleThemeChange}
-            >
-              {THEME_PRESETS.map(theme => (
-                <option key={theme.id} value={theme.id}>{theme.name}</option>
-              ))}
-            </select>
+            <div className="theme-selector">
+              <select
+                className="text-input theme-select"
+                value={selectedTheme}
+                onChange={handleThemeChange}
+              >
+                <optgroup label="Built-in Themes">
+                  {THEME_PRESETS.map(theme => (
+                    <option key={theme.id} value={theme.id}>{theme.name}</option>
+                  ))}
+                </optgroup>
+                {customThemes.length > 0 && (
+                  <optgroup label="Custom Themes">
+                    {customThemes.map(theme => (
+                      <option key={theme.id} value={theme.id}>{theme.name}</option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
+              <button 
+                className="secondary-button theme-btn"
+                onClick={handleImportTheme}
+                title="Import Theme"
+              >
+                <Icon name="import" size={18} />
+              </button>
+              <button 
+                className="secondary-button theme-btn"
+                onClick={handleExportTheme}
+                title="Export Current Theme"
+              >
+                <Icon name="export" size={18} />
+              </button>
+            </div>
             <div className="setting-hint">
-              Choose a color theme for the application interface
+              Choose a color theme for the application interface. Import custom themes or export your current theme.
             </div>
           </div>
 

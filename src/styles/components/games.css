@@ -26,7 +26,7 @@
 .games-title {
   font-size: 48px;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -102,6 +102,11 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: filter 0.3s;
+}
+
+.game-card.hovered .game-card-image img {
+  filter: blur(4px) brightness(0.7);
 }
 
 .game-card-placeholder {
@@ -110,10 +115,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: filter 0.3s;
 }
 
-/* Make game card placeholder icons white */
+.game-card.hovered .game-card-placeholder {
+  filter: blur(4px) brightness(0.7);
+}
+
 .game-card-placeholder .icon,
 .game-card-placeholder img.icon {
   width: 120px;
@@ -133,6 +142,8 @@
     rgba(0, 0, 0, 0.4) 50%,
     transparent 100%
   );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .game-card-name {
@@ -145,24 +156,34 @@
   color: white;
   font-size: 20px;
   font-weight: 600;
-  z-index: 1;
+  z-index: 2;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
 }
 
 .game-card-actions {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   display: flex;
-  justify-content: space-between;
-  padding: 16px;
-  z-index: 2;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.game-card.hovered .game-card-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .game-action-btn {
-  padding: 10px 20px;
+  padding: 12px 32px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -171,10 +192,11 @@
   transition: all 0.2s;
   border: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 140px;
 }
 
 .game-action-open {
-  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
 }
 
@@ -185,7 +207,7 @@
 
 .game-action-edit {
   background: white;
-  color: var(--accent-primary, #667eea);
+  color: #667eea;
 }
 
 .game-action-edit:hover {
@@ -212,29 +234,22 @@
 }
 
 .game-card-add-icon {
-  color: var(--accent-primary, #667eea);
+  color: #667eea;
   margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Make add card icon blue */
 .game-card-add-icon .icon,
 .game-card-add-icon img.icon {
   width: 80px;
   height: 80px;
   filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
-  opacity: 0.7;
-}
-
-.game-card-add:hover .game-card-add-icon .icon,
-.game-card-add:hover .game-card-add-icon img.icon {
-  opacity: 1;
 }
 
 .game-card-add-text {
   font-size: 18px;
   font-weight: 600;
-  color: var(--accent-primary, #667eea);
+  color: #667eea;
 }
