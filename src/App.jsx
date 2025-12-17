@@ -177,6 +177,41 @@ export default function App() {
     }
   }
 
+  async function handleDeleteGame(game, shouldExport) {
+    try {
+      if (shouldExport) {
+        // Export configuration before deleting
+        const exportPath = await save({
+          defaultPath: `${game.name}-config.json`,
+          filters: [{
+            name: 'JSON',
+            extensions: ['json']
+          }]
+        });
+        
+        if (exportPath) {
+          const gameDb = await invoke("load_game_db", { gameId: game.id });
+          const exportData = JSON.stringify(gameDb, null, 2);
+          await invoke("export_config", { path: exportPath, data: exportData });
+        }
+      }
+      
+      // Delete the game
+      await invoke("delete_game", { gameId: game.id });
+      
+      // If the deleted game was the current game, reset
+      if (currentGame && currentGame.id === game.id) {
+        setCurrentGame(null);
+        setView("home");
+      }
+      
+      await loadGames();
+      setGameDialog({ isOpen: false, game: null });
+    } catch (err) {
+      alert("Failed to delete game: " + err);
+    }
+  }
+
   if (!db && view !== "home" && view !== "games" && view !== "settings") {
     return <div>Loading...</div>;
   }
@@ -1098,6 +1133,7 @@ export default function App() {
         game={gameDialog.game}
         onConfirm={handleGameDialogConfirm}
         onCancel={() => setGameDialog({ isOpen: false, game: null })}
+        onDelete={handleDeleteGame}
       />
 
       <PromptDialog

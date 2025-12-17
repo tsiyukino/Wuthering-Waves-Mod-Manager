@@ -134,7 +134,7 @@ fn add_game(name: String, description: String, preview: Option<String>) -> Resul
     let default_db = Database {
         root_folder: String::from("C:\\Games\\Mods"),
         disabled_folder: String::from("_Disabled"),
-        mod_strategy: String::from("wuthering_waves"),
+        mod_strategy: String::from("generic_rename"),
         categories: vec![Category {
             id: 1,
             name: String::from("Root"),
@@ -210,7 +210,7 @@ fn load_game_db(game_id: i64) -> Result<Database, String> {
     
     // Add fields if they don't exist (for backward compatibility)
     if db.mod_strategy.is_empty() {
-        db.mod_strategy = String::from("wuthering_waves");
+        db.mod_strategy = String::from("generic_rename");
     }
     if db.disabled_folder.is_empty() {
         db.disabled_folder = String::from("_Disabled");
@@ -243,7 +243,7 @@ fn load_db() -> Result<Database, String> {
         let default = Database {
             root_folder: String::from("C:\\Games\\Mods"),
             disabled_folder: String::from("_Disabled"),
-            mod_strategy: String::from("wuthering_waves"),
+            mod_strategy: String::from("generic_rename"),
             categories: vec![Category {
                 id: 1,
                 name: String::from("Root"),

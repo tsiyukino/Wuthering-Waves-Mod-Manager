@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
 
-export default function GameDialog({ isOpen, game, onConfirm, onCancel }) {
+export default function GameDialog({ isOpen, game, onConfirm, onCancel, onDelete }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [preview, setPreview] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function GameDialog({ isOpen, game, onConfirm, onCancel }) {
         setDescription("");
         setPreview(null);
       }
+      setShowDeleteConfirm(false);
     }
   }, [isOpen, game]);
 
@@ -125,6 +127,16 @@ export default function GameDialog({ isOpen, game, onConfirm, onCancel }) {
           </div>
           
           <div className="modal-footer">
+            {game && (
+              <button 
+                type="button" 
+                className="modal-btn-delete" 
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Delete Game
+              </button>
+            )}
+            <div style={{ flex: 1 }}></div>
             <button type="button" className="modal-btn-cancel" onClick={onCancel}>
               Cancel
             </button>
@@ -133,6 +145,36 @@ export default function GameDialog({ isOpen, game, onConfirm, onCancel }) {
             </button>
           </div>
         </form>
+
+        {showDeleteConfirm && (
+          <div className="delete-confirm-overlay">
+            <div className="delete-confirm-box">
+              <h4>Delete Game Profile?</h4>
+              <p>This will delete the game profile and all associated data.</p>
+              <p><strong>Would you like to export the configuration before deleting?</strong></p>
+              <div className="delete-confirm-actions">
+                <button 
+                  className="modal-btn-cancel" 
+                  onClick={() => setShowDeleteConfirm(false)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  className="modal-btn-secondary" 
+                  onClick={() => onDelete(game, true)}
+                >
+                  Export & Delete
+                </button>
+                <button 
+                  className="modal-btn-delete" 
+                  onClick={() => onDelete(game, false)}
+                >
+                  Delete Without Export
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

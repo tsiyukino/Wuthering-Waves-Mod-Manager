@@ -188,3 +188,28 @@
   color: #f39c12;
   font-style: italic;
 }
+
+/* Strategy Selector */
+.strategy-selector {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.strategy-select {
+  flex: 1;
+}
+
+.strategy-add-btn {
+  padding: 12px 16px;
+  min-width: auto;
+  font-size: 20px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.strategy-add-btn span {
+  line-height: 1;
+}

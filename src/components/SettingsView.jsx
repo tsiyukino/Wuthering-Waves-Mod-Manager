@@ -82,19 +82,31 @@ export default function SettingsView({
 
           <div className="setting-group">
             <label>Mod Management Strategy</label>
-            <select
-              className="text-input"
-              value={modStrategy}
-              onChange={e => onChangeStrategy(e.target.value)}
-              disabled={!hasGameSelected}
-            >
-              <option value="wuthering_waves">Wuthering Waves (Rename .ini files)</option>
-              <option value="generic_rename">Generic (Move to disabled folder)</option>
-            </select>
+            <div className="strategy-selector">
+              <select
+                className="text-input strategy-select"
+                value={modStrategy}
+                onChange={e => onChangeStrategy(e.target.value)}
+                disabled={!hasGameSelected}
+              >
+                <option value="generic_rename">Generic (Move to folder)</option>
+                <option value="wuthering_waves">Wuthering Waves (.ini rename)</option>
+              </select>
+              <button 
+                className="secondary-button strategy-add-btn"
+                disabled={!hasGameSelected}
+                onClick={() => alert("Custom strategy feature coming soon!")}
+              >
+                <span>+</span>
+              </button>
+            </div>
             <div className="setting-description">
-              <strong>Wuthering Waves:</strong> Adds/removes .bak extension to all .ini files in the mod folder
+              <strong>Generic:</strong> Moves mod folder to/from a disabled folder when toggling
               <br />
-              <strong>Generic:</strong> Moves mod folder to/from the disabled folder
+              <strong>Wuthering Waves:</strong> Adds/removes .bak extension to .ini files when toggling
+              <br />
+              <br />
+              <strong>Custom Strategies:</strong> You can create your own mod management strategies for specific games. Click the + button to add a custom strategy.
             </div>
           </div>
 
