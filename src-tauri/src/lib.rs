@@ -271,6 +271,32 @@ async fn copy_mod(source: String, dest_root: String, dest_name: String, window: 
     Ok(())
 }
 
+#[tauri::command]
+async fn move_mod(source: String, dest_root: String, dest_name: String) -> Result<(), String> {
+    let source_path = Path::new(&source);
+    let dest_path = Path::new(&dest_root).join(&dest_name);
+    
+    if !source_path.exists() {
+        return Err(format!("Source folder does not exist: {}", source_path.display()));
+    }
+    
+    if dest_path.exists() {
+        return Err(format!("Destination already exists: {}", dest_path.display()));
+    }
+    
+    // Create destination parent directory if needed
+    if let Some(parent) = dest_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create destination directory: {}", e))?;
+    }
+    
+    // Move/rename the folder
+    fs::rename(source_path, &dest_path)
+        .map_err(|e| format!("Failed to move mod: {}", e))?;
+    
+    Ok(())
+}
+
 fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     if !dst.exists() {
         fs::create_dir(dst)?;
@@ -578,6 +604,18 @@ fn load_notes(root: String, name: String) -> Result<String, String> {
     }
 }
 
+#[tauri::command]
+fn export_config(path: String, data: String) -> Result<(), String> {
+    fs::write(&path, data)
+        .map_err(|e| format!("Failed to export configuration: {}", e))
+}
+
+#[tauri::command]
+fn import_config(path: String) -> Result<String, String> {
+    fs::read_to_string(&path)
+        .map_err(|e| format!("Failed to import configuration: {}", e))
+}
+
 // Simple base64 encoding/decoding
 fn base64_encode(data: &[u8]) -> String {
     use std::fmt::Write;
@@ -658,11 +696,14 @@ pub fn run() {
             delete_mod,
             rename_mod,
             copy_mod,
+            move_mod,
             extract_archive,
             save_preview,
             load_preview,
             save_notes,
             load_notes,
+            export_config,
+            import_config,
             get_appdata_path,
             get_local_path,
             check_db_exists,

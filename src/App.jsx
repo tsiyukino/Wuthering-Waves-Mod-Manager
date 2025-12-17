@@ -221,34 +221,12 @@ export default function App() {
         return;
       }
 
-      // If it's a folder, ask copy or move
-      let shouldMove = false;
-      if (!isArchive) {
-        const result = await new Promise((resolve) => {
-          setDeleteConfirm({
-            title: "Copy or Move?",
-            message: "Do you want to copy or move this folder?",
-            onConfirm: () => {
-              setDeleteConfirm(null);
-              resolve(true); // move
-            },
-            onCancel: () => {
-              setDeleteConfirm(null);
-              resolve(false); // copy
-            },
-            confirmText: "Move",
-            cancelText: "Copy"
-          });
-        });
-        shouldMove = result;
-      }
-
       // Show processing indicator
       setIsProcessing(true);
-      setProgressMessage(isArchive ? "Extracting archive..." : (shouldMove ? "Moving folder..." : "Copying folder..."));
+      setProgressMessage(isArchive ? "Extracting archive..." : "Moving folder...");
       setProgressPercent(0);
 
-      // Handle archive extraction or folder copy/move
+      // Handle archive extraction or folder move
       try {
         if (isArchive) {
           await invoke("extract_archive", {
@@ -256,24 +234,17 @@ export default function App() {
             destRoot: db.root_folder,
             destName: folderName
           });
-        } else if (shouldMove) {
-          // Move folder
-          const destPath = db.root_folder + "/" + folderName;
-          await invoke("bash_tool", {
-            command: `mv "${selected}" "${destPath}"`,
-            description: "Move mod folder"
-          });
         } else {
-          // Copy folder
-          await invoke("copy_mod", {
+          // Move folder
+          await invoke("move_mod", {
             source: selected,
             destRoot: db.root_folder,
             destName: folderName
           });
         }
-      } catch (copyErr) {
+      } catch (err) {
         setIsProcessing(false);
-        alert("Failed to " + (isArchive ? "extract" : (shouldMove ? "move" : "copy")) + " mod: " + copyErr);
+        alert("Failed to " + (isArchive ? "extract" : "move") + " mod: " + err);
         return;
       }
 
@@ -734,98 +705,123 @@ export default function App() {
     
     if (oldRoot === newRoot) return;
     
-    // Check if old root folder exists and has mods
-    try {
-      const oldFolderExists = await invoke("bash_tool", {
-        command: `test -d "${oldRoot}" && echo "exists" || echo "not_exists"`,
-        description: "Check if old root folder exists"
-      }).then(result => result.includes("exists"));
-      
-      if (oldFolderExists && db.mods.length > 0) {
-        // Ask user if they want to move mods
-        setDeleteConfirm({
-          title: "Migrate Mods?",
-          message: `The old root folder "${oldRoot}" contains ${db.mods.length} mod(s). Do you want to move them to the new location "${newRoot}"?`,
-          confirmText: "Move Mods",
-          cancelText: "Change Path Only",
-          onConfirm: async () => {
-            setDeleteConfirm(null);
-            setIsProcessing(true);
-            setProgressMessage("Moving mods to new location...");
-            
-            try {
-              // Create new root folder if it doesn't exist
-              await invoke("bash_tool", {
-                command: `mkdir -p "${newRoot}"`,
-                description: "Create new root folder"
-              });
-              
-              // Move all mod folders
-              for (const mod of db.mods) {
-                const oldPath = `${oldRoot}/${mod.name}`;
-                const newPath = `${newRoot}/${mod.name}`;
-                
-                try {
-                  await invoke("bash_tool", {
-                    command: `mv "${oldPath}" "${newPath}"`,
-                    description: `Move mod ${mod.name}`
-                  });
-                } catch (err) {
-                  console.error(`Failed to move ${mod.name}:`, err);
-                }
-              }
-              
-              // Also move disabled folder if using generic_rename strategy
-              if (db.mod_strategy === "generic_rename") {
-                const oldDisabled = `${oldRoot}/${db.disabled_folder || "_Disabled"}`;
-                const newDisabled = `${newRoot}/${db.disabled_folder || "_Disabled"}`;
-                
-                try {
-                  await invoke("bash_tool", {
-                    command: `test -d "${oldDisabled}" && mv "${oldDisabled}" "${newDisabled}" || true`,
-                    description: "Move disabled folder"
-                  });
-                } catch (err) {
-                  console.error("Failed to move disabled folder:", err);
-                }
-              }
-              
-              setIsProcessing(false);
-              setProgressMessage("");
-              
-              persist({
-                ...db,
-                root_folder: newRoot
-              });
-              
-              alert("Mods migrated successfully!");
-            } catch (err) {
-              setIsProcessing(false);
-              setProgressMessage("");
-              alert("Failed to migrate mods: " + err);
-            }
-          },
-          onCancel: () => {
-            setDeleteConfirm(null);
-            persist({
-              ...db,
-              root_folder: newRoot
-            });
-          }
-        });
-      } else {
-        // No mods or old folder doesn't exist, just change the path
-        persist({
-          ...db,
-          root_folder: newRoot
-        });
-      }
-    } catch (err) {
-      // If check fails, just change the path
+    // If there are mods, warn the user
+    if (db.mods.length > 0) {
+      setDeleteConfirm({
+        title: "Change Root Folder?",
+        message: `You have ${db.mods.length} mod(s) in the database. Changing the root folder will update the path to "${newRoot}". You will need to manually move your mod folders from "${oldRoot}" to "${newRoot}" if needed.`,
+        confirmText: "Change Path",
+        cancelText: "Cancel",
+        onConfirm: () => {
+          setDeleteConfirm(null);
+          persist({
+            ...db,
+            root_folder: newRoot
+          });
+        },
+        onCancel: () => {
+          setDeleteConfirm(null);
+        }
+      });
+    } else {
+      // No mods, just change the path
       persist({
         ...db,
         root_folder: newRoot
       });
+    }
+  }
+
+  async function handleExportConfig() {
+    try {
+      const savePath = await open({
+        multiple: false,
+        directory: false,
+        title: "Export Configuration",
+        filters: [{
+          name: 'JSON Files',
+          extensions: ['json']
+        }]
+      });
+
+      if (!savePath) return;
+
+      // Use save dialog instead
+      const { save } = await import('@tauri-apps/plugin-dialog');
+      const filePath = await save({
+        defaultPath: 'mod-manager-config.json',
+        filters: [{
+          name: 'JSON Files',
+          extensions: ['json']
+        }]
+      });
+
+      if (!filePath) return;
+
+      // Export configuration
+      const config = {
+        categories: db.categories,
+        mods: db.mods,
+        tags: db.tags,
+        tag_metadata: db.tag_metadata || []
+      };
+
+      await invoke("export_config", {
+        path: filePath,
+        data: JSON.stringify(config, null, 2)
+      });
+
+      alert("Configuration exported successfully!");
+    } catch (err) {
+      alert("Failed to export configuration: " + err);
+    }
+  }
+
+  async function handleImportConfig() {
+    try {
+      const selected = await open({
+        multiple: false,
+        directory: false,
+        title: "Import Configuration",
+        filters: [{
+          name: 'JSON Files',
+          extensions: ['json']
+        }]
+      });
+
+      if (!selected) return;
+
+      setDeleteConfirm({
+        title: "Import Configuration?",
+        message: "This will replace your current categories, mods, and tags. Your root folder and settings will not be changed. Continue?",
+        confirmText: "Import",
+        cancelText: "Cancel",
+        onConfirm: async () => {
+          setDeleteConfirm(null);
+          
+          try {
+            const content = await invoke("import_config", { path: selected });
+            const imported = JSON.parse(content);
+
+            persist({
+              ...db,
+              categories: imported.categories || db.categories,
+              mods: imported.mods || db.mods,
+              tags: imported.tags || db.tags,
+              tag_metadata: imported.tag_metadata || db.tag_metadata || []
+            });
+
+            alert("Configuration imported successfully!");
+          } catch (err) {
+            alert("Failed to import configuration: " + err);
+          }
+        },
+        onCancel: () => {
+          setDeleteConfirm(null);
+        }
+      });
+    } catch (err) {
+      alert("Failed to open file: " + err);
     }
   }
 
@@ -1010,6 +1006,8 @@ export default function App() {
               persist({ ...db, disabled_folder: value })
             }
             onChangeDataLocation={changeDataLocation}
+            onExportConfig={handleExportConfig}
+            onImportConfig={handleImportConfig}
           />
         )}
       </main>
