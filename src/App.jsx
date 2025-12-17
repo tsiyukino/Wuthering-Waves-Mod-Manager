@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { open } from '@tauri-apps/plugin-dialog';
+import { open, save } from '@tauri-apps/plugin-dialog';
 import { listen } from '@tauri-apps/api/event';
 import { relaunch } from '@tauri-apps/plugin-process';
 
@@ -734,20 +734,6 @@ export default function App() {
 
   async function handleExportConfig() {
     try {
-      const savePath = await open({
-        multiple: false,
-        directory: false,
-        title: "Export Configuration",
-        filters: [{
-          name: 'JSON Files',
-          extensions: ['json']
-        }]
-      });
-
-      if (!savePath) return;
-
-      // Use save dialog instead
-      const { save } = await import('@tauri-apps/plugin-dialog');
       const filePath = await save({
         defaultPath: 'mod-manager-config.json',
         filters: [{

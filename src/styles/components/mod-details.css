@@ -1,0 +1,186 @@
+/* Mod Details Panel */
+.preview-section {
+  padding: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.preview-image-container {
+  position: relative;
+  width: 100%;
+  padding-top: 66.67%;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.preview-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 2px dashed rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.02);
+  transition: all 0.2s;
+}
+
+.preview-placeholder:hover {
+  border-color: #667eea;
+  background: rgba(103, 126, 234, 0.05);
+}
+
+.upload-btn {
+  width: 100%;
+}
+
+.mod-name-section {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.mod-name-display {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mod-name-text {
+  font-weight: 700;
+  font-size: 18px;
+  color: #333;
+  flex: 1;
+  word-break: break-word;
+}
+
+.mod-name-edit {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.mod-name-edit:hover {
+  background: rgba(103, 126, 234, 0.1);
+}
+
+.mod-name-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #667eea;
+  border-radius: 6px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: inherit;
+  background: white;
+}
+
+.mod-name-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
+}
+
+.notes-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow: hidden;
+  min-height: 150px;
+}
+
+.notes-textarea {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  resize: none;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
+}
+
+.tags-section {
+  padding: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.tag-input-container-inline {
+  position: relative;
+  margin-bottom: 12px;
+}
+
+.tag-input-inline {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s;
+}
+
+.tag-input-inline:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
+}
+
+.tag-suggestions-inline {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  margin-top: 4px;
+}
+
+.tag-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 32px;
+}
+
+.empty-tags-hint {
+  color: #999;
+  font-size: 13px;
+}

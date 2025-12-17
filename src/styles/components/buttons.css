@@ -1,0 +1,64 @@
+/* Buttons */
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #4a4a4a;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.secondary-button:hover:not(:disabled) {
+  background: white;
+  border-color: #667eea;
+  color: #667eea;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(103, 126, 234, 0.2);
+}
+
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Inputs */
+.text-input, select.text-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.2s;
+}
+
+select.text-input {
+  cursor: pointer;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: #667eea;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
+}
+
+/* Empty States */
+.empty-message {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+}
+
+.empty-panel {
+  padding: 40px 20px;
+  text-align: center;
+  color: #888;
+}
