@@ -62,3 +62,12 @@ select.text-input {
   text-align: center;
   color: #888;
 }
+
+/* Icons in buttons */
+.secondary-button .icon,
+.secondary-button img.icon {
+  width: 18px;
+  height: 18px;
+  vertical-align: middle;
+  margin-right: 4px;
+}

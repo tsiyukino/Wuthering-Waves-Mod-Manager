@@ -110,9 +110,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 80px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: rgba(255, 255, 255, 0.5);
+}
+
+.game-card-placeholder .icon,
+.game-card-placeholder img.icon {
+  width: 120px;
+  height: 120px;
+  filter: brightness(0) saturate(100%) invert(100%);
+  opacity: 0.5;
 }
 
 .game-card-overlay {
@@ -205,9 +211,18 @@
 }
 
 .game-card-add-icon {
-  font-size: 64px;
   color: #667eea;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-card-add-icon .icon,
+.game-card-add-icon img.icon {
+  width: 80px;
+  height: 80px;
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
 }
 
 .game-card-add-text {

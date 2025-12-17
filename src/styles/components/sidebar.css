@@ -20,6 +20,12 @@
   justify-content: space-between;
   padding: 16px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  min-height: 60px;
+}
+
+.sidebar.collapsed .sidebar-header {
+  justify-content: center;
+  padding: 16px 8px;
 }
 
 .logo {
@@ -104,4 +110,33 @@ nav {
 
 .nav-item.disabled:hover {
   background: transparent;
+}
+
+/* Material Icons in sidebar */
+.nav-item .icon,
+.nav-item img.icon {
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  user-select: none;
+  flex-shrink: 0;
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 0.8;
+}
+
+.nav-item:hover .icon,
+.nav-item:hover img.icon {
+  opacity: 1;
+}
+
+.nav-item.active .icon,
+.nav-item.active img.icon {
+  opacity: 1;
+}
+
+.collapse-btn .icon,
+.collapse-btn img.icon {
+  width: 24px;
+  height: 24px;
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
 }

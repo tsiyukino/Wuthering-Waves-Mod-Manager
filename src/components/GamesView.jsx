@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Icon from "./IconSimple";
 
 export default function GamesView({ games, onSelectGame, onAddGame, onEditGame }) {
   const [hoveredGame, setHoveredGame] = useState(null);
@@ -33,7 +34,9 @@ export default function GamesView({ games, onSelectGame, onAddGame, onEditGame }
                 {game.preview ? (
                   <img src={game.preview} alt={game.name} />
                 ) : (
-                  <div className="game-card-placeholder">🎮</div>
+                  <div className="game-card-placeholder">
+                    <Icon name="games" size={120} />
+                  </div>
                 )}
                 <div className="game-card-overlay"></div>
               </div>
@@ -69,7 +72,9 @@ export default function GamesView({ games, onSelectGame, onAddGame, onEditGame }
             onClick={onAddGame}
           >
             <div className="game-card-add-content">
-              <div className="game-card-add-icon">+</div>
+              <div className="game-card-add-icon">
+                <Icon name="add" size={80} />
+              </div>
               <div className="game-card-add-text">Add Game</div>
             </div>
           </div>

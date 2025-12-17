@@ -1,3 +1,5 @@
+import Icon from "./IconSimple";
+
 export default function HomePage() {
   return (
     <div className="home-page">
@@ -9,19 +11,25 @@ export default function HomePage() {
 
         <div className="home-features">
           <div className="feature-card">
-            <div className="feature-icon">🎮</div>
+            <div className="feature-icon">
+              <Icon name="games" size={64} />
+            </div>
             <h3>Multi-Game Support</h3>
             <p>Manage mods for multiple games in one place</p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">📁</div>
+            <div className="feature-icon">
+              <Icon name="folder" size={64} />
+            </div>
             <h3>Easy Organization</h3>
             <p>Categories, tags, and notes to keep everything organized</p>
           </div>
 
           <div className="feature-card">
-            <div className="feature-icon">⚡</div>
+            <div className="feature-icon">
+              <Icon name="settings" size={64} />
+            </div>
             <h3>Quick Toggle</h3>
             <p>Enable or disable mods with a single click</p>
           </div>

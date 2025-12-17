@@ -1,4 +1,5 @@
 import React from "react";
+import Icon from "./IconSimple";
 
 export default function SettingsView({ 
   rootFolder, 
@@ -97,7 +98,7 @@ export default function SettingsView({
                 disabled={!hasGameSelected}
                 onClick={() => alert("Custom strategy feature coming soon!")}
               >
-                <span>+</span>
+                <Icon name="add" size={24} />
               </button>
             </div>
             <div className="setting-description">
@@ -135,14 +136,14 @@ export default function SettingsView({
                 onClick={onExportConfig}
                 disabled={!hasGameSelected}
               >
-                <span>💾</span> Export Configuration
+                <Icon name="export" size={18} /> Export Configuration
               </button>
               <button 
                 className="secondary-button" 
                 onClick={onImportConfig}
                 disabled={!hasGameSelected}
               >
-                <span>📥</span> Import Configuration
+                <Icon name="import" size={18} /> Import Configuration
               </button>
             </div>
             <div className="setting-hint">

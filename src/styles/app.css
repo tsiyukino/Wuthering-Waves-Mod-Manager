@@ -2,6 +2,7 @@
 
 /* Base styles */
 @import './components/base.css';
+@import './theme.css';
 
 /* Layout components */
 @import './components/sidebar.css';

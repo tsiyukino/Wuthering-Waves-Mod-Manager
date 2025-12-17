@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Icon from "./IconSimple";
+import ThemeToggle from "./ThemeToggle";
 
 export default function Sidebar({ view, onChangeView, onClearSelections, hasGameSelected }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -24,7 +26,7 @@ export default function Sidebar({ view, onChangeView, onClearSelections, hasGame
           onClick={() => setCollapsed(!collapsed)}
           title={collapsed ? "Expand" : "Collapse"}
         >
-          {collapsed ? "☰" : "×"}
+          <Icon name={collapsed ? "menu" : "close"} size={24} />
         </button>
       </div>
 
@@ -34,7 +36,7 @@ export default function Sidebar({ view, onChangeView, onClearSelections, hasGame
           onClick={() => handleViewChange("home")}
           title="Home"
         >
-          <span>🏠</span>
+          <Icon name="home" size={20} />
           {!collapsed && <span>Home</span>}
         </div>
 
@@ -43,7 +45,7 @@ export default function Sidebar({ view, onChangeView, onClearSelections, hasGame
           onClick={() => handleViewChange("games")}
           title="Games"
         >
-          <span>🎮</span>
+          <Icon name="games" size={20} />
           {!collapsed && <span>Games</span>}
         </div>
 
@@ -54,7 +56,7 @@ export default function Sidebar({ view, onChangeView, onClearSelections, hasGame
           onClick={() => handleViewChange("manager")}
           title={hasGameSelected ? "File Manager" : "Select a game first"}
         >
-          <span>📁</span>
+          <Icon name="folder" size={20} />
           {!collapsed && <span>File Manager</span>}
         </div>
 
@@ -63,18 +65,19 @@ export default function Sidebar({ view, onChangeView, onClearSelections, hasGame
           onClick={() => handleViewChange("tags")}
           title={hasGameSelected ? "Tags" : "Select a game first"}
         >
-          <span>🏷️</span>
+          <Icon name="tags" size={20} />
           {!collapsed && <span>Tags</span>}
         </div>
       </nav>
 
       <div className="sidebar-footer">
+        <ThemeToggle collapsed={collapsed} />
         <div
           className={`nav-item ${view === "settings" ? "active" : ""}`}
           onClick={() => handleViewChange("settings")}
           title="Settings"
         >
-          <span>⚙️</span>
+          <Icon name="settings" size={20} />
           {!collapsed && <span>Settings</span>}
         </div>
       </div>

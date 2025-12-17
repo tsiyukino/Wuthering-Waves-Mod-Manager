@@ -213,3 +213,9 @@
 .strategy-add-btn span {
   line-height: 1;
 }
+
+.strategy-add-btn .icon,
+.strategy-add-btn img.icon {
+  width: 24px;
+  height: 24px;
+}

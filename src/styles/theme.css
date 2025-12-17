@@ -1,0 +1,114 @@
+/* Dark Theme Variables */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #3a3a3a;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-tertiary: #808080;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --shadow: rgba(0, 0, 0, 0.5);
+  --accent: #667eea;
+  --accent-hover: #764ba2;
+}
+
+/* Light Theme Variables (default) */
+[data-theme="light"], :root {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --text-tertiary: #999999;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --shadow: rgba(0, 0, 0, 0.1);
+  --accent: #667eea;
+  --accent-hover: #764ba2;
+}
+
+/* Apply theme colors */
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Sidebar */
+.sidebar {
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-color);
+}
+
+.sidebar-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.nav-item {
+  color: var(--text-primary);
+}
+
+.nav-item:hover {
+  background: var(--bg-secondary);
+}
+
+.nav-item.active {
+  background: var(--bg-tertiary);
+  color: var(--accent);
+}
+
+/* Main content */
+.app-main {
+  background: var(--bg-primary);
+}
+
+/* Cards */
+.game-card,
+.feature-card,
+.setting-group {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+/* Inputs */
+.text-input,
+select {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Buttons */
+.secondary-button {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.secondary-button:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Modals */
+.modal-dialog {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 8px 32px var(--shadow);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-tertiary);
+}

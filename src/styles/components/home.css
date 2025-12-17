@@ -54,8 +54,17 @@
 }
 
 .feature-icon {
-  font-size: 48px;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-icon .icon,
+.feature-icon img.icon {
+  width: 64px;
+  height: 64px;
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
 }
 
 .feature-card h3 {

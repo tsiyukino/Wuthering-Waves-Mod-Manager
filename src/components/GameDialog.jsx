@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import Icon from "./IconSimple";
 
 export default function GameDialog({ isOpen, game, onConfirm, onCancel, onDelete }) {
   const [name, setName] = useState("");
@@ -85,7 +86,7 @@ export default function GameDialog({ isOpen, game, onConfirm, onCancel, onDelete
                     <img src={preview} alt="Preview" />
                   ) : (
                     <div className="game-dialog-preview-placeholder">
-                      <span style={{ fontSize: 48 }}>🎮</span>
+                      <Icon name="games" size={64} />
                       <span>Click or drag image here</span>
                     </div>
                   )}
