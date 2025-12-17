@@ -1,19 +1,11 @@
-/* Dark Theme Variables */
-[data-theme="dark"] {
-  --bg-primary: #1a1a1a;
-  --bg-secondary: #2d2d2d;
-  --bg-tertiary: #3a3a3a;
-  --text-primary: #ffffff;
-  --text-secondary: #b0b0b0;
-  --text-tertiary: #808080;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --shadow: rgba(0, 0, 0, 0.5);
-  --accent: #667eea;
-  --accent-hover: #764ba2;
-}
+/* Theme System using CSS Custom Properties */
 
-/* Light Theme Variables (default) */
-[data-theme="light"], :root {
+:root {
+  /* Accent colors - can be changed dynamically */
+  --accent-primary: #667eea;
+  --accent-secondary: #764ba2;
+  
+  /* Base colors */
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
@@ -22,14 +14,20 @@
   --text-tertiary: #999999;
   --border-color: rgba(0, 0, 0, 0.1);
   --shadow: rgba(0, 0, 0, 0.1);
-  --accent: #667eea;
-  --accent-hover: #764ba2;
 }
 
-/* Apply theme colors */
-body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+/* Apply theme colors throughout the app */
+
+/* Text gradient using accent colors */
+.logo,
+.home-title,
+.games-title,
+.modal-header h3,
+.settings-category-title {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Sidebar */
@@ -47,12 +45,20 @@ body {
 }
 
 .nav-item:hover {
-  background: var(--bg-secondary);
+  background: rgba(103, 126, 234, 0.1);
 }
 
 .nav-item.active {
-  background: var(--bg-tertiary);
-  color: var(--accent);
+  background: rgba(103, 126, 234, 0.15);
+  color: var(--accent-primary);
+}
+
+.collapse-btn {
+  color: var(--accent-primary);
+}
+
+.collapse-btn:hover {
+  background: rgba(103, 126, 234, 0.1);
 }
 
 /* Main content */
@@ -60,55 +66,177 @@ body {
   background: var(--bg-primary);
 }
 
-/* Cards */
-.game-card,
-.feature-card,
-.setting-group {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 2px 8px var(--shadow);
-}
-
-/* Inputs */
-.text-input,
-select {
-  background: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary);
-}
-
 /* Buttons */
-.secondary-button {
-  background: var(--bg-secondary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
+.secondary-button:hover:not(:disabled) {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  box-shadow: 0 2px 8px rgba(103, 126, 234, 0.2);
 }
 
-.secondary-button:hover {
-  background: var(--bg-tertiary);
+.modal-btn-confirm {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
 }
 
-/* Modals */
-.modal-dialog {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  box-shadow: 0 8px 32px var(--shadow);
+.modal-btn-confirm:hover {
+  box-shadow: 0 4px 12px rgba(103, 126, 234, 0.4);
 }
 
-.modal-header {
-  border-bottom: 1px solid var(--border-color);
+/* Game cards */
+.game-card:hover {
+  box-shadow: 0 8px 24px rgba(103, 126, 234, 0.3);
 }
 
-/* Theme toggle button */
-.theme-toggle {
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-secondary);
-  cursor: pointer;
-  transition: all 0.2s;
+.game-action-open {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
 }
 
-.theme-toggle:hover {
-  background: var(--bg-tertiary);
+.game-action-edit {
+  color: var(--accent-primary);
+}
+
+.game-card-add:hover {
+  background: rgba(103, 126, 234, 0.1);
+  border-color: rgba(103, 126, 234, 0.5);
+}
+
+.game-card-add-icon .icon,
+.game-card-add-icon img.icon {
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+}
+
+.game-card-add-text {
+  color: var(--accent-primary);
+}
+
+/* Categories */
+.category.selected {
+  background: rgba(103, 126, 234, 0.15);
+  color: var(--accent-primary);
+}
+
+.category-group-header {
+  color: var(--accent-primary);
+  background: rgba(103, 126, 234, 0.05);
+}
+
+/* File items */
+.file-item:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 2px 8px rgba(103, 126, 234, 0.2);
+}
+
+.file-item.selected {
+  background: rgba(103, 126, 234, 0.1);
+  border-color: var(--accent-primary);
+}
+
+.file-item.multi-selected {
+  background: rgba(103, 126, 234, 0.15);
+  border-color: var(--accent-primary);
+}
+
+.mod-tag {
+  background: rgba(103, 126, 234, 0.15);
+  color: var(--accent-primary);
+}
+
+/* Tags */
+.tag-card:hover {
+  box-shadow: 0 4px 16px rgba(103, 126, 234, 0.2);
+}
+
+.tag-card.selected {
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 16px rgba(103, 126, 234, 0.3);
+}
+
+.tag-card-placeholder,
+.tag-preview-placeholder {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+}
+
+.tag-chip {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+}
+
+/* Settings */
+.setting-description {
+  background: rgba(103, 126, 234, 0.05);
+  border-left-color: var(--accent-primary);
+}
+
+.migration-option-header {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+}
+
+.migration-arrow {
+  color: var(--accent-primary);
+}
+
+.migration-backup-option {
+  background: rgba(103, 126, 234, 0.05);
+}
+
+/* Progress */
+.progress-spinner {
+  border: 4px solid rgba(103, 126, 234, 0.2);
+  border-top-color: var(--accent-primary);
+}
+
+.progress-fill {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+}
+
+/* Feature cards */
+.feature-card:hover {
+  box-shadow: 0 8px 24px rgba(103, 126, 234, 0.2);
+}
+
+.feature-icon .icon,
+.feature-icon img.icon {
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+}
+
+.home-action {
+  background: rgba(103, 126, 234, 0.1);
+  border-color: rgba(103, 126, 234, 0.3);
+}
+
+.home-hint {
+  color: var(--accent-primary);
+}
+
+/* Input focus states */
+.text-input:focus,
+.modal-input:focus,
+.search-input:focus,
+.tag-input-inline:focus,
+.notes-textarea:focus,
+.tag-description-textarea:focus,
+.mod-name-input:focus,
+.tag-name-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
+}
+
+/* Preview placeholders */
+.preview-placeholder:hover {
+  border-color: var(--accent-primary);
+  background: rgba(103, 126, 234, 0.05);
+}
+
+.game-dialog-preview-area:hover {
+  border-color: var(--accent-primary);
+  background: rgba(103, 126, 234, 0.05);
+}
+
+/* Action buttons */
+.mod-name-edit:hover,
+.tag-name-edit:hover {
+  background: rgba(103, 126, 234, 0.1);
+}
+
+/* Dividers */
+.sidebar-divider {
+  background: var(--border-color);
 }

@@ -20,7 +20,7 @@
 .home-title {
   font-size: 48px;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -60,11 +60,18 @@
   justify-content: center;
 }
 
+/* Make feature icons blue */
 .feature-icon .icon,
 .feature-icon img.icon {
   width: 64px;
   height: 64px;
   filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 0.8;
+}
+
+.feature-card:hover .feature-icon .icon,
+.feature-card:hover .feature-icon img.icon {
+  opacity: 1;
 }
 
 .feature-card h3 {
@@ -89,6 +96,6 @@
 
 .home-hint {
   font-size: 16px;
-  color: #667eea;
+  color: var(--accent-primary, #667eea);
   margin: 0;
 }

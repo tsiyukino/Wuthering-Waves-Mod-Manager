@@ -26,7 +26,7 @@
 .games-title {
   font-size: 48px;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -110,9 +110,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
 }
 
+/* Make game card placeholder icons white */
 .game-card-placeholder .icon,
 .game-card-placeholder img.icon {
   width: 120px;
@@ -173,7 +174,7 @@
 }
 
 .game-action-open {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
   color: white;
 }
 
@@ -184,7 +185,7 @@
 
 .game-action-edit {
   background: white;
-  color: #667eea;
+  color: var(--accent-primary, #667eea);
 }
 
 .game-action-edit:hover {
@@ -211,22 +212,29 @@
 }
 
 .game-card-add-icon {
-  color: #667eea;
+  color: var(--accent-primary, #667eea);
   margin-bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Make add card icon blue */
 .game-card-add-icon .icon,
 .game-card-add-icon img.icon {
   width: 80px;
   height: 80px;
   filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 0.7;
+}
+
+.game-card-add:hover .game-card-add-icon .icon,
+.game-card-add:hover .game-card-add-icon img.icon {
+  opacity: 1;
 }
 
 .game-card-add-text {
   font-size: 18px;
   font-weight: 600;
-  color: #667eea;
+  color: var(--accent-primary, #667eea);
 }

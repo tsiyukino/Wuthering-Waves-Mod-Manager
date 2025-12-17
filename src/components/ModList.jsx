@@ -1,4 +1,5 @@
 import ModItem from "./ModItem";
+import Icon from "./IconSimple";
 
 export default function ModList({
   mods,
@@ -14,7 +15,6 @@ export default function ModList({
   onDeselectAll,
   onSearchChange
 }) {
-  // Get all subcategory IDs recursively
   function getAllSubcategoryIds(categoryId) {
     const ids = [categoryId];
     const children = categories.filter(c => c.parent_id === categoryId);
@@ -29,7 +29,6 @@ export default function ModList({
   const categoryIds = getAllSubcategoryIds(selectedCategory);
   let visible = mods.filter(m => categoryIds.includes(m.category_id));
   
-  // Apply search filter
   if (searchQuery) {
     const query = searchQuery.toLowerCase();
     visible = visible.filter(m => 
@@ -38,7 +37,6 @@ export default function ModList({
     );
   }
 
-  // Group mods by category for display
   function getDirectChildren(parentId) {
     return categories.filter(c => c.parent_id === parentId);
   }
@@ -84,10 +82,11 @@ export default function ModList({
   return (
     <>
       <div className="search-bar">
+        <Icon name="search" size={20} style={{ marginRight: 8 }} />
         <input
           type="text"
           className="search-input"
-          placeholder="🔍 Search by name or tag..."
+          placeholder="Search by name or tag..."
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
         />

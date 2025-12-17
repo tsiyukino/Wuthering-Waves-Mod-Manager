@@ -1,6 +1,15 @@
 import React from "react";
 import Icon from "./IconSimple";
 
+const THEME_PRESETS = [
+  { id: 'default', name: 'Default', primary: '#667eea', secondary: '#764ba2' },
+  { id: 'ocean', name: 'Ocean Blue', primary: '#2E86DE', secondary: '#54A0FF' },
+  { id: 'forest', name: 'Forest Green', primary: '#26A65B', secondary: '#2ECC71' },
+  { id: 'sunset', name: 'Sunset Orange', primary: '#EE5A6F', secondary: '#F39C12' },
+  { id: 'purple', name: 'Royal Purple', primary: '#9B59B6', secondary: '#8E44AD' },
+  { id: 'crimson', name: 'Crimson Red', primary: '#E74C3C', secondary: '#C0392B' },
+];
+
 export default function SettingsView({ 
   rootFolder, 
   modStrategy,
@@ -18,6 +27,9 @@ export default function SettingsView({
   onImportConfig
 }) {
   const [newRootFolder, setNewRootFolder] = React.useState(rootFolder);
+  const [selectedTheme, setSelectedTheme] = React.useState(() => {
+    return localStorage.getItem('theme-preset') || 'default';
+  });
 
   function handleRootFolderChange(e) {
     setNewRootFolder(e.target.value);
@@ -29,6 +41,27 @@ export default function SettingsView({
     }
   }
 
+  function handleThemeChange(e) {
+    const themeId = e.target.value;
+    setSelectedTheme(themeId);
+    localStorage.setItem('theme-preset', themeId);
+    
+    const theme = THEME_PRESETS.find(t => t.id === themeId);
+    if (theme) {
+      document.documentElement.style.setProperty('--accent-primary', theme.primary);
+      document.documentElement.style.setProperty('--accent-secondary', theme.secondary);
+    }
+  }
+
+  // Apply theme on mount
+  React.useEffect(() => {
+    const theme = THEME_PRESETS.find(t => t.id === selectedTheme);
+    if (theme) {
+      document.documentElement.style.setProperty('--accent-primary', theme.primary);
+      document.documentElement.style.setProperty('--accent-secondary', theme.secondary);
+    }
+  }, [selectedTheme]);
+
   return (
     <div className="settings-view">
       <div className="settings-content">
@@ -38,6 +71,22 @@ export default function SettingsView({
         <div className="settings-category">
           <h3 className="settings-category-title">General Settings</h3>
           
+          <div className="setting-group">
+            <label>Theme Preset</label>
+            <select
+              className="text-input"
+              value={selectedTheme}
+              onChange={handleThemeChange}
+            >
+              {THEME_PRESETS.map(theme => (
+                <option key={theme.id} value={theme.id}>{theme.name}</option>
+              ))}
+            </select>
+            <div className="setting-hint">
+              Choose a color theme for the application interface
+            </div>
+          </div>
+
           <div className="setting-group">
             <label>Data Storage Location</label>
             <select

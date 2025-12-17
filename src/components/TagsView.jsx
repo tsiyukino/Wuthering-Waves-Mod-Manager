@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Icon from "./IconSimple";
 
 export default function TagsView({
   tags,
@@ -17,7 +18,6 @@ export default function TagsView({
 }) {
   const [filterConflict, setFilterConflict] = useState(false);
 
-  // Calculate tag status
   function getTagStatus(tagName) {
     const modsWithTag = mods.filter(m => m.tags && m.tags.includes(tagName));
     if (modsWithTag.length === 0) return { status: 'empty', color: '#999' };
@@ -28,7 +28,6 @@ export default function TagsView({
     const metadata = tagMetadata.find(tm => tm.name === tagName);
     const isMutuallyExclusive = metadata?.mutually_exclusive || false;
     
-    // Check for conflict (mutually exclusive with multiple enabled)
     if (isMutuallyExclusive && enabledCount > 1) {
       return { status: 'conflict', color: '#e74c3c', text: 'Conflict' };
     }
@@ -42,7 +41,6 @@ export default function TagsView({
     }
   }
 
-  // Get tag metadata or create default
   function getTagMetadata(tagName) {
     return tagMetadata.find(tm => tm.name === tagName) || {
       name: tagName,
@@ -52,7 +50,6 @@ export default function TagsView({
     };
   }
 
-  // Filter tags
   let displayTags = tags;
   
   if (searchQuery) {
@@ -77,13 +74,16 @@ export default function TagsView({
     <div className="tags-view">
       <div className="tags-main">
         <div className="tags-header">
-          <input
-            type="text"
-            className="search-input"
-            placeholder="🔍 Search tags..."
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
+          <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+            <Icon name="search" size={20} style={{ marginRight: 8 }} />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search tags..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange(e.target.value)}
+            />
+          </div>
           <button 
             className={`filter-conflict-btn ${filterConflict ? 'active' : ''}`}
             onClick={() => setFilterConflict(!filterConflict)}
@@ -133,14 +133,14 @@ export default function TagsView({
 
         <div className="tags-actions">
           <button className="secondary-button" onClick={onAddTag}>
-            <span>➕</span> Add Tag
+            <Icon name="add" size={18} /> Add Tag
           </button>
           <button 
             className="secondary-button" 
             onClick={onRemoveTag}
             disabled={!selectedTag}
           >
-            <span>🗑️</span> Remove Tag
+            <Icon name="delete" size={18} /> Remove Tag
           </button>
         </div>
       </div>
@@ -255,7 +255,7 @@ function TagDetail({
           className="upload-btn secondary-button"
           onClick={() => document.getElementById('tag-image-upload').click()}
         >
-          <span>⬆️</span> Upload Image
+          <Icon name="upload" size={18} /> Upload Image
         </button>
       </div>
 
@@ -277,19 +277,19 @@ function TagDetail({
           className="secondary-button"
           onClick={() => onEnableAll(tag)}
         >
-          <span>✓</span> Enable
+          <Icon name="enable" size={18} /> Enable
         </button>
         <button 
           className="secondary-button"
           onClick={() => onDisableAll(tag)}
         >
-          <span>✗</span> Disable
+          <Icon name="disable" size={18} /> Disable
         </button>
         <button 
           className="secondary-button"
           onClick={() => onSearchInMods(tag)}
         >
-          <span>🔍</span> Find
+          <Icon name="find" size={18} /> Find
         </button>
       </div>
 

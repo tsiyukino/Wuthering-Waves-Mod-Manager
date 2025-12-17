@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import CategoryTree from "./CategoryTree";
 import ModList from "./ModList";
 import ModDetails from "./ModDetails";
+import Icon from "./IconSimple";
 
 export default function ManagerView({
   categories,
@@ -38,7 +39,6 @@ export default function ManagerView({
   const [isResizingRight, setIsResizingRight] = useState(false);
   const containerRef = useRef(null);
 
-  // Calculate visible mods for Select All
   function getAllSubcategoryIds(categoryId) {
     const ids = [categoryId];
     const children = categories.filter(c => c.parent_id === categoryId);
@@ -122,10 +122,10 @@ export default function ManagerView({
 
         <div className="panel-actions">
           <button className="secondary-button" onClick={onAddCategory}>
-            <span>➕</span> Add
+            <Icon name="add" size={18} /> Add
           </button>
           <button className="secondary-button" onClick={onDeleteCategory}>
-            <span>🗑️</span> Delete
+            <Icon name="delete" size={18} /> Delete
           </button>
         </div>
       </div>
@@ -170,22 +170,22 @@ export default function ManagerView({
                 Deselect
               </button>
               <button className="secondary-button" onClick={onBulkEnable}>
-                Enable Selected
+                <Icon name="enable" size={18} /> Enable Selected
               </button>
               <button className="secondary-button" onClick={onBulkDisable}>
-                Disable Selected
+                <Icon name="disable" size={18} /> Disable Selected
               </button>
               <button className="secondary-button" onClick={onManageTags}>
-                <span>📁</span> Move To...
+                <Icon name="move" size={18} /> Move To...
               </button>
               <button className="secondary-button" onClick={onBulkDelete}>
-                <span>🗑️</span> Delete Selected
+                <Icon name="delete" size={18} /> Delete Selected
               </button>
             </>
           ) : (
             <>
               <button className="secondary-button" onClick={onAddMod}>
-                <span>➕</span> Add File
+                <Icon name="add" size={18} /> Add File
               </button>
               <button className="secondary-button" onClick={handleSelectAll}>
                 Select All
@@ -195,21 +195,21 @@ export default function ManagerView({
                 onClick={() => onToggleMod(selectedMod)}
                 disabled={!selectedMod}
               >
-                {selectedMod?.enabled ? "Disable" : "Enable"}
+                {selectedMod?.enabled ? <><Icon name="disable" size={18} /> Disable</> : <><Icon name="enable" size={18} /> Enable</>}
               </button>
               <button 
                 className="secondary-button" 
                 onClick={onManageTags}
                 disabled={!selectedMod}
               >
-                <span>📁</span> Move To...
+                <Icon name="move" size={18} /> Move To...
               </button>
               <button 
                 className="secondary-button" 
                 onClick={onDeleteMod}
                 disabled={!selectedMod}
               >
-                <span>🗑️</span> Delete
+                <Icon name="delete" size={18} /> Delete
               </button>
             </>
           )}

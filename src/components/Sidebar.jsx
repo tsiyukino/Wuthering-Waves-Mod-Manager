@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Icon from "./IconSimple";
-import ThemeToggle from "./ThemeToggle";
 
 export default function Sidebar({ view, onChangeView, onClearSelections, hasGameSelected }) {
   const [collapsed, setCollapsed] = useState(true);
@@ -71,7 +70,6 @@ export default function Sidebar({ view, onChangeView, onClearSelections, hasGame
       </nav>
 
       <div className="sidebar-footer">
-        <ThemeToggle collapsed={collapsed} />
         <div
           className={`nav-item ${view === "settings" ? "active" : ""}`}
           onClick={() => handleViewChange("settings")}

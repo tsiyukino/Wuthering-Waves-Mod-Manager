@@ -30,7 +30,7 @@
   margin: 0 0 24px 0;
   font-size: 20px;
   font-weight: 600;
-  color: #667eea;
+  color: var(--accent-primary, #667eea);
   padding-bottom: 12px;
   border-bottom: 2px solid rgba(103, 126, 234, 0.2);
 }
@@ -57,11 +57,23 @@
   flex-wrap: wrap;
 }
 
+/* Make icons in setting buttons blue */
+.setting-buttons .secondary-button .icon,
+.setting-buttons .secondary-button img.icon {
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 0.7;
+}
+
+.setting-buttons .secondary-button:hover .icon,
+.setting-buttons .secondary-button:hover img.icon {
+  opacity: 1;
+}
+
 .setting-description {
   margin-top: 8px;
   padding: 12px;
   background: rgba(103, 126, 234, 0.05);
-  border-left: 3px solid #667eea;
+  border-left: 3px solid var(--accent-primary, #667eea);
   border-radius: 4px;
   font-size: 13px;
   color: #555;
@@ -104,7 +116,7 @@
 }
 
 .migration-option-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--accent-primary, #667eea) 0%, var(--accent-secondary, #764ba2) 100%);
   color: white;
   padding: 12px 16px;
   font-weight: 600;
@@ -150,7 +162,7 @@
 
 .migration-arrow {
   font-size: 32px;
-  color: #667eea;
+  color: var(--accent-primary, #667eea);
   font-weight: bold;
 }
 
@@ -214,8 +226,16 @@
   line-height: 1;
 }
 
+/* Make strategy add button icon blue */
 .strategy-add-btn .icon,
 .strategy-add-btn img.icon {
   width: 24px;
   height: 24px;
+  filter: brightness(0) saturate(100%) invert(46%) sepia(97%) saturate(1352%) hue-rotate(221deg) brightness(93%) contrast(92%);
+  opacity: 0.7;
+}
+
+.strategy-add-btn:hover:not(:disabled) .icon,
+.strategy-add-btn:hover:not(:disabled) img.icon {
+  opacity: 1;
 }

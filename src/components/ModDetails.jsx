@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import Icon from "./IconSimple";
 
 export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPreview, onUpdateTags, onUpdateName }) {
   const fileInputRef = useRef(null);
@@ -132,7 +133,7 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
               onDrop={handleDrop}
               onDragOver={handleDragOver}
             >
-              <span style={{ fontSize: 48 }}>🖼️</span>
+              <Icon name="upload" size={48} />
               <span>Drag image here or click Upload</span>
             </div>
           )}
@@ -150,7 +151,7 @@ export default function ModDetails({ mod, allTags, onUpdateNotes, onUploadPrevie
           className="upload-btn secondary-button"
           onClick={() => fileInputRef.current?.click()}
         >
-          <span>⬆️</span> Upload Image
+          <Icon name="upload" size={18} /> Upload Image
         </button>
       </div>
 
